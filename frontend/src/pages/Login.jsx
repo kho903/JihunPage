@@ -1,6 +1,24 @@
+import { useState } from "react";
 import { Link } from "react-router";
 
+const initialFormData = {
+  userid: "",
+  userpwd: "",
+};
+
 function Login() {
+  const [formData, setFormData] = useState(initialFormData);
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((previousFormData) => {
+      return {
+        ...previousFormData,
+        [name]: value,
+      };
+    });
+  };
+
   const handleSubmit = (event) => {
     event.preventDefault();
   };
@@ -32,6 +50,8 @@ function Login() {
                     className="form-control"
                     id="userid"
                     name="userid"
+                    value={formData.userid}
+                    onChange={handleChange}
                     placeholder="아이디를 입력해 주세요"
                     autoComplete="username"
                   />
@@ -47,6 +67,8 @@ function Login() {
                     className="form-control"
                     id="userpwd"
                     name="userpwd"
+                    value={formData.userpwd}
+                    onChange={handleChange}
                     placeholder="비밀번호를 입력해 주세요"
                     autoComplete="current-password"
                   />

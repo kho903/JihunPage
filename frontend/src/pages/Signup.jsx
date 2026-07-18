@@ -1,6 +1,28 @@
+import { useState } from "react";
 import { Link } from "react-router";
 
+const initialFormData = {
+  userid: "",
+  userpwd: "",
+  userpwdConfirm: "",
+  username: "",
+  tel: "",
+  email: "",
+};
+
 function Signup() {
+  const [formData, setFormData] = useState(initialFormData);
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((previousFormData) => {
+      return {
+        ...previousFormData,
+        [name]: value,
+      };
+    });
+  };
+
   const handleSubmit = (event) => {
     event.preventDefault();
   };
@@ -32,6 +54,8 @@ function Signup() {
                     className="form-control"
                     id="userid"
                     name="userid"
+                    value={formData.userid}
+                    onChange={handleChange}
                     placeholder="아이디를 입력해 주세요"
                     autoComplete="username"
                   />
@@ -52,6 +76,8 @@ function Signup() {
                     className="form-control"
                     id="userpwd"
                     name="userpwd"
+                    value={formData.userpwd}
+                    onChange={handleChange}
                     placeholder="비밀번호를 입력해 주세요"
                     autoComplete="new-password"
                   />
@@ -75,6 +101,8 @@ function Signup() {
                     className="form-control"
                     id="userpwdConfirm"
                     name="userpwdConfirm"
+                    value={formData.userpwdConfirm}
+                    onChange={handleChange}
                     placeholder="비밀번호를 다시 입력해 주세요"
                     autoComplete="new-password"
                   />
@@ -90,6 +118,8 @@ function Signup() {
                     className="form-control"
                     id="username"
                     name="username"
+                    value={formData.username}
+                    onChange={handleChange}
                     placeholder="이름을 입력해 주세요"
                     autoComplete="name"
                   />
@@ -105,6 +135,8 @@ function Signup() {
                     className="form-control"
                     id="tel"
                     name="tel"
+                    value={formData.tel}
+                    onChange={handleChange}
                     placeholder="010-1234-5678"
                     autoComplete="tel"
                   />
@@ -120,6 +152,8 @@ function Signup() {
                     className="form-control"
                     id="email"
                     name="email"
+                    value={formData.email}
+                    onChange={handleChange}
                     placeholder="example@email.com"
                     autoComplete="email"
                   />

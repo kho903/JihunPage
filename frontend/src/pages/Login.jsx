@@ -8,6 +8,7 @@ const initialFormData = {
 
 function Login() {
   const [formData, setFormData] = useState(initialFormData);
+  const [errors, setErrors] = useState({});
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -17,10 +18,41 @@ function Login() {
         [name]: value,
       };
     });
+
+    setErrors((previousErrors) => {
+      return {
+        ...previousErrors,
+        [name]: "",
+      };
+    });
+  };
+
+  const validateForm = () => {
+    const nextErrors = {};
+
+    if (formData.userid.trim() === "") {
+      nextErrors.userid = "아이디를 입력해 주세요.";
+    }
+
+    if (formData.userpwd === "") {
+      nextErrors.userpwd = "비밀번호를 입력해 주세요.";
+    }
+
+    return nextErrors;
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
+
+    const nextErrors = validateForm();
+
+    setErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
+
+    alert("로그인 입력값 검증을 통과했습니다.");
   };
 
   return (
@@ -39,7 +71,7 @@ function Login() {
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit} noValidate>
                 <div className="mb-3">
                   <label htmlFor="userid" className="form-label fw-semibold">
                     아이디
@@ -47,7 +79,9 @@ function Login() {
 
                   <input
                     type="text"
-                    className="form-control"
+                    className={`form-control ${
+                      errors.userid ? "is-invalid" : ""
+                    }`}
                     id="userid"
                     name="userid"
                     value={formData.userid}
@@ -55,6 +89,10 @@ function Login() {
                     placeholder="아이디를 입력해 주세요"
                     autoComplete="username"
                   />
+
+                  {errors.userid && (
+                    <div className="invalid-feedback">{errors.userid}</div>
+                  )}
                 </div>
 
                 <div className="mb-4">
@@ -64,7 +102,9 @@ function Login() {
 
                   <input
                     type="password"
-                    className="form-control"
+                    className={`form-control ${
+                      errors.userpwd ? "is-invalid" : ""
+                    }`}
                     id="userpwd"
                     name="userpwd"
                     value={formData.userpwd}
@@ -72,6 +112,10 @@ function Login() {
                     placeholder="비밀번호를 입력해 주세요"
                     autoComplete="current-password"
                   />
+
+                  {errors.userpwd && (
+                    <div className="invalid-feedback">{errors.userpwd}</div>
+                  )}
                 </div>
 
                 <button type="submit" className="btn btn-primary w-100 py-2">

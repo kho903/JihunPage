@@ -10,6 +10,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.sisa.jihunpage.auth.exception.InvalidCredentialsException;
+import com.sisa.jihunpage.auth.exception.UnauthenticatedException;
 import com.sisa.jihunpage.member.exception.DuplicateUserIdException;
 
 @RestControllerAdvice
@@ -55,6 +57,37 @@ public class GlobalExceptionHandler {
 			.status(HttpStatus.CONFLICT)
 			.body(response);
 	}
+
+	@ExceptionHandler(InvalidCredentialsException.class)
+	public ResponseEntity<ApiErrorResponse> handleInvalidCredentialsException(
+		InvalidCredentialsException exception
+	) {
+		ApiErrorResponse response = new ApiErrorResponse(
+			"INVALID_CREDENTIALS",
+			exception.getMessage(),
+			Map.of()
+		);
+
+		return ResponseEntity
+			.status(HttpStatus.UNAUTHORIZED)
+			.body(response);
+	}
+
+	@ExceptionHandler(UnauthenticatedException.class)
+	public ResponseEntity<ApiErrorResponse> handleUnauthenticatedException(
+		UnauthenticatedException exception
+	) {
+		ApiErrorResponse response = new ApiErrorResponse(
+			"UNAUTHENTICATED",
+			exception.getMessage(),
+			Map.of()
+		);
+
+		return ResponseEntity
+			.status(HttpStatus.UNAUTHORIZED)
+			.body(response);
+	}
+
 
 	private String convertFieldName(String fieldName) {
 		return switch (fieldName) {

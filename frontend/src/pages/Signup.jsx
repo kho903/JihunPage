@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+
+import { signupMember } from "../api/memberApi";
 
 const initialFormData = {
   userid: "",
@@ -22,11 +24,16 @@ const telRegex = /^0\d{1,2}-\d{3,4}-\d{4}$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function Signup() {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState(initialFormData);
   const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
+
     setFormData((previousFormData) => {
       return {
         ...previousFormData,
@@ -40,6 +47,8 @@ function Signup() {
         [name]: "",
       };
     });
+
+    setSubmitError("");
   };
 
   const validateForm = () => {
@@ -80,16 +89,61 @@ function Signup() {
     return nextErrors;
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (isSubmitting) {
+      return;
+    }
 
     const nextErrors = validateForm();
 
     setErrors(nextErrors);
+    setSubmitError("");
 
+    // 프론트엔드에서 검증 실패시 API 요청을 보내지 않음.
     if (Object.keys(nextErrors).length > 0) return;
 
-    alert("회원가입 입력값 검증을 통과했습니다.");
+    setIsSubmitting(true);
+    try {
+      await signupMember(formData);
+      setFormData(initialFormData);
+      setErrors({});
+      alert("회원가입이 완료되었습니다.");
+      navigate("/login");
+    } catch (error) {
+      if (error.status === 400) {
+        setErrors(error.data?.errors ?? {});
+        setSubmitError(
+          error.data?.message ?? "입력한 회원 정보를 확인해 주세요.",
+        );
+        return;
+      }
+
+      if (error.status === 409) {
+        setErrors((previousErrors) => {
+          return {
+            ...previousErrors,
+            userid: error.message,
+          };
+        });
+        return;
+      }
+
+      if (
+        error.status === undefined ||
+        error.status === null ||
+        error.status >= 500
+      ) {
+        setSubmitError(
+          "서버에 연결할 수 없거나 서버 오류가 발생했습니다. 백엔드 서버를 확인해 주세요.",
+        );
+        return;
+      }
+      setSubmitError("회원가입 처리 중 알 수 없는 오류가 발생했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -123,6 +177,7 @@ function Signup() {
                     onChange={handleChange}
                     placeholder="아이디를 입력해 주세요"
                     autoComplete="username"
+                    disabled={isSubmitting}
                   />
 
                   {errors.userid ? (
@@ -151,6 +206,7 @@ function Signup() {
                     onChange={handleChange}
                     placeholder="비밀번호를 입력해 주세요"
                     autoComplete="new-password"
+                    disabled={isSubmitting}
                   />
 
                   {errors.userpwd ? (
@@ -180,6 +236,7 @@ function Signup() {
                     onChange={handleChange}
                     placeholder="비밀번호를 다시 입력해 주세요"
                     autoComplete="new-password"
+                    disabled={isSubmitting}
                   />
 
                   {errors.userpwdConfirm && (
@@ -203,6 +260,7 @@ function Signup() {
                     onChange={handleChange}
                     placeholder="이름을 입력해 주세요"
                     autoComplete="name"
+                    disabled={isSubmitting}
                   />
 
                   {errors.username && (
@@ -224,6 +282,7 @@ function Signup() {
                     onChange={handleChange}
                     placeholder="010-1234-5678"
                     autoComplete="tel"
+                    disabled={isSubmitting}
                   />
 
                   {errors.tel && (
@@ -245,6 +304,7 @@ function Signup() {
                     onChange={handleChange}
                     placeholder="example@email.com"
                     autoComplete="email"
+                    disabled={isSubmitting}
                   />
 
                   {errors.email && (
@@ -252,8 +312,17 @@ function Signup() {
                   )}
                 </div>
 
-                <button type="submit" className="btn btn-primary w-100 py-2">
-                  회원가입
+                {submitError && (
+                  <div className="alert alert-danger" role="alert">
+                    {submitError}
+                  </div>
+                )}
+                <button
+                  type="submit"
+                  className="btn btn-primary w-100 py-2"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "회원가입 처리 중..." : "회원가입"}
                 </button>
               </form>
 

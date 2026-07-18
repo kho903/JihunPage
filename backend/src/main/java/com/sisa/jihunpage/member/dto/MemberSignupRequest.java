@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Pattern;
 
 public record MemberSignupRequest(
 
-	@JsonProperty("userId")
+	@JsonProperty("userid")
 	@NotBlank(message = "아이디를 입력해 주세요.")
 	@Pattern(
 		regexp = "^[A-Za-z][A-Za-z0-9_]{5,14}$",

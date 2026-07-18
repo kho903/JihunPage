@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+
+import { useAuth } from "../context/useAuth";
 
 const initialFormData = {
   userid: "",
@@ -7,11 +9,17 @@ const initialFormData = {
 };
 
 function Login() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
   const [formData, setFormData] = useState(initialFormData);
   const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
+
     setFormData((previousFormData) => {
       return {
         ...previousFormData,
@@ -25,6 +33,8 @@ function Login() {
         [name]: "",
       };
     });
+
+    setSubmitError("");
   };
 
   const validateForm = () => {
@@ -41,18 +51,66 @@ function Login() {
     return nextErrors;
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (isSubmitting) {
+      return;
+    }
 
     const nextErrors = validateForm();
 
     setErrors(nextErrors);
+    setSubmitError("");
 
     if (Object.keys(nextErrors).length > 0) {
       return;
     }
 
-    alert("로그인 입력값 검증을 통과했습니다.");
+    setIsSubmitting(true);
+
+    try {
+      await login(formData);
+
+      setFormData(initialFormData);
+      setErrors({});
+
+      navigate("/", { replace: true });
+    } catch (error) {
+      if (error.status === 400) {
+        setErrors(error.data?.error ?? {});
+        setSubmitError(
+          error.data?.message ?? "입력한 로그인 정보를 확인해 주세요.",
+        );
+        return;
+      }
+
+      if (error.status === 401) {
+        setSubmitError(
+          error.message ?? "아이디 또는 비밀번호가 올바르지 않습니다.",
+        );
+
+        setFormData((previousFormData) => {
+          return {
+            ...previousFormData,
+            userpwd: "",
+          };
+        });
+
+        return;
+      }
+
+      if (error.status === null || error.status >= 500) {
+        setSubmitError(
+          "서버에 연결할 수 없거나 서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+        );
+        return;
+      }
+
+      setSubmitError("로그인 처리 중 알 수 없는 오류가 발생했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -111,6 +169,7 @@ function Login() {
                     onChange={handleChange}
                     placeholder="비밀번호를 입력해 주세요"
                     autoComplete="current-password"
+                    disabled={isSubmitting}
                   />
 
                   {errors.userpwd && (
@@ -118,8 +177,18 @@ function Login() {
                   )}
                 </div>
 
-                <button type="submit" className="btn btn-primary w-100 py-2">
-                  로그인
+                {submitError && (
+                  <div className="alert alert-danger" role="alert">
+                    {submitError}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  className="btn btn-primary w-100 py-2"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "로그인 처리 중..." : "로그인"}
                 </button>
               </form>
 

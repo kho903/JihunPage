@@ -1,6 +1,7 @@
 import About from "../components/home/About";
 import Experience from "../components/home/Experience";
 import Hero from "../components/home/Hero";
+import Skills from "../components/home/Skills";
 
 function Home() {
   return (
@@ -8,6 +9,7 @@ function Home() {
       <Hero />
       <About />
       <Experience />
+      <Skills />
     </>
   );
 }

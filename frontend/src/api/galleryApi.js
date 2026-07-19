@@ -4,6 +4,7 @@ export async function getPublicGallery(userid, signal) {
   const response = await fetch(`/api/members/${encodedUserid}/gallery`, {
     method: "GET",
     signal,
+    cache: "no-store",
   });
 
   const data = await response.json().catch(() => null);
@@ -13,6 +14,27 @@ export async function getPublicGallery(userid, signal) {
 
     error.status = response.status;
     error.code = data?.code;
+
+    throw error;
+  }
+
+  return data;
+}
+
+export async function uploadGalleryPhoto(formData) {
+  const response = await fetch("/api/gallery/photos", {
+    method: "POST",
+    body: formData,
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const error = new Error(data?.message || "사진을 업로드하지 못했습니다.");
+
+    error.status = response.status;
+    error.code = data?.code;
+    error.errors = data?.errors;
 
     throw error;
   }

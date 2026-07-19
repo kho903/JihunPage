@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useLocation, useParams } from "react-router";
 
 import { getPublicGallery } from "../api/galleryApi";
 import PhotoModal from "../components/gallery/PhotoModal";
@@ -8,12 +8,14 @@ import "./css/Gallery.css";
 
 function Gallery() {
   const { userid } = useParams();
+  const location = useLocation();
 
   const [gallery, setGallery] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
 
+  const refreshGallery = location.state?.refreshGallery;
   useEffect(() => {
     const abortController = new AbortController();
 
@@ -51,7 +53,7 @@ function Gallery() {
     return () => {
       abortController.abort();
     };
-  }, [userid]);
+  }, [userid, refreshGallery]);
 
   const openPhotoModal = (photo) => {
     setSelectedPhoto(photo);

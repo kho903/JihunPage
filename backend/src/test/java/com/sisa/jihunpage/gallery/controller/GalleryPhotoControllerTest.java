@@ -24,13 +24,16 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import com.sisa.jihunpage.BackendApplication;
 import com.sisa.jihunpage.auth.exception.UnauthenticatedException;
+import com.sisa.jihunpage.gallery.exception.GalleryImageStorageException;
 import com.sisa.jihunpage.gallery.exception.GalleryPhotoAccessDeniedException;
 import com.sisa.jihunpage.gallery.exception.GalleryPhotoNotFoundException;
 import com.sisa.jihunpage.gallery.dto.GalleryPhotoCreateRequest;
 import com.sisa.jihunpage.gallery.dto.GalleryPhotoResponse;
+import com.sisa.jihunpage.gallery.exception.InvalidGalleryImageException;
 import com.sisa.jihunpage.gallery.service.GalleryService;
 
 @WebMvcTest(GalleryPhotoController.class)
@@ -305,5 +308,157 @@ class GalleryPhotoControllerTest {
 		then(galleryService)
 			.should()
 			.deletePhoto(1L, 999L);
+	}
+
+	@Test
+	void returnsBadRequestWhenGalleryImageFormatIsInvalid()
+		throws Exception {
+
+		MockMultipartFile image = new MockMultipartFile(
+			"image",
+			"document.txt",
+			MediaType.TEXT_PLAIN_VALUE,
+			"not-an-image".getBytes()
+		);
+
+		given(
+			galleryService.createPhoto(
+				eq(1L),
+				any(GalleryPhotoCreateRequest.class)
+			)
+		).willThrow(
+			new InvalidGalleryImageException(
+				"JPEG, PNG, WebP 형식의 이미지만 업로드할 수 있습니다."
+			)
+		);
+
+		mockMvc.perform(
+				multipart("/api/gallery/photos")
+					.file(image)
+					.param("title", "잘못된 이미지")
+					.sessionAttr(LOGIN_MEMBER_ID, 1L)
+			)
+			.andExpect(status().isBadRequest())
+			.andExpect(
+				jsonPath("$.code")
+					.value("INVALID_GALLERY_IMAGE")
+			)
+			.andExpect(
+				jsonPath("$.message")
+					.value(
+						"JPEG, PNG, WebP 형식의 이미지만 업로드할 수 있습니다."
+					)
+			)
+			.andExpect(
+				jsonPath("$.errors").isEmpty()
+			);
+
+		then(galleryService)
+			.should()
+			.createPhoto(
+				eq(1L),
+				any(GalleryPhotoCreateRequest.class)
+			);
+	}
+
+	@Test
+	void returnsInternalServerErrorWhenGalleryImageStorageFails()
+		throws Exception {
+
+		MockMultipartFile image = new MockMultipartFile(
+			"image",
+			"tokyo.jpg",
+			MediaType.IMAGE_JPEG_VALUE,
+			"test-image-content".getBytes()
+		);
+
+		given(
+			galleryService.createPhoto(
+				eq(1L),
+				any(GalleryPhotoCreateRequest.class)
+			)
+		).willThrow(
+			new GalleryImageStorageException(
+				"갤러리 이미지를 저장하는 중 오류가 발생했습니다."
+			)
+		);
+
+		mockMvc.perform(
+				multipart("/api/gallery/photos")
+					.file(image)
+					.param("title", "Tokyo Tower")
+					.sessionAttr(LOGIN_MEMBER_ID, 1L)
+			)
+			.andExpect(
+				status().isInternalServerError()
+			)
+			.andExpect(
+				jsonPath("$.code")
+					.value(
+						"GALLERY_IMAGE_STORAGE_FAILED"
+					)
+			)
+			.andExpect(
+				jsonPath("$.message")
+					.value(
+						"갤러리 이미지를 처리하는 중 오류가 발생했습니다."
+					)
+			)
+			.andExpect(
+				jsonPath("$.errors").isEmpty()
+			);
+
+		then(galleryService)
+			.should()
+			.createPhoto(
+				eq(1L),
+				any(GalleryPhotoCreateRequest.class)
+			);
+	}
+
+	@Test
+	void returnsPayloadTooLargeWhenUploadSizeIsExceeded()
+		throws Exception {
+
+		MockMultipartFile image = new MockMultipartFile(
+			"image",
+			"large-image.jpg",
+			MediaType.IMAGE_JPEG_VALUE,
+			"test-image-content".getBytes()
+		);
+
+		given(
+			galleryService.createPhoto(
+				eq(1L),
+				any(GalleryPhotoCreateRequest.class)
+			)
+		).willThrow(
+			new MaxUploadSizeExceededException(
+				5L * 1024 * 1024
+			)
+		);
+
+		mockMvc.perform(
+				multipart("/api/gallery/photos")
+					.file(image)
+					.param("title", "용량 초과 이미지")
+					.sessionAttr(LOGIN_MEMBER_ID, 1L)
+			)
+			.andExpect(
+				status().isPayloadTooLarge()
+			)
+			.andExpect(
+				jsonPath("$.code")
+					.value("GALLERY_IMAGE_TOO_LARGE")
+			)
+			.andExpect(
+				jsonPath("$.message")
+					.value(
+						"이미지 파일은 5MB 이하만 업로드할 수 있습니다."
+					)
+			)
+			.andExpect(
+				jsonPath("$.errors").isEmpty()
+			);
 	}
 }

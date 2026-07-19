@@ -3,7 +3,9 @@ package com.sisa.jihunpage.gallery.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -49,5 +51,26 @@ public class GalleryPhotoController {
 		return ResponseEntity
 			.status(HttpStatus.CREATED)
 			.body(response);
+	}
+
+	@DeleteMapping("{photoId}")
+	public ResponseEntity<Void> deletePhoto(
+		@PathVariable("photoId")
+		Long photoId,
+
+		@SessionAttribute(
+			name = LOGIN_MEMBER_ID,
+			required = false
+		)
+		Long authenticatedMemberId
+	) {
+		galleryService.deletePhoto(
+			authenticatedMemberId,
+			photoId
+		);
+
+		return ResponseEntity
+			.noContent()
+			.build();
 	}
 }

@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.sisa.jihunpage.auth.exception.InvalidCredentialsException;
 import com.sisa.jihunpage.auth.exception.UnauthenticatedException;
 import com.sisa.jihunpage.gallery.exception.GalleryOwnerNotFoundException;
+import com.sisa.jihunpage.gallery.exception.GalleryPhotoAccessDeniedException;
+import com.sisa.jihunpage.gallery.exception.GalleryPhotoNotFoundException;
 import com.sisa.jihunpage.member.exception.DuplicateUserIdException;
 
 @RestControllerAdvice
@@ -101,6 +103,36 @@ public class GlobalExceptionHandler {
 
 		return ResponseEntity
 			.status(HttpStatus.NOT_FOUND)
+			.body(response);
+	}
+
+	@ExceptionHandler(GalleryPhotoNotFoundException.class)
+	public ResponseEntity<ApiErrorResponse> handleGalleryPhotoNotFoundException(
+		GalleryPhotoNotFoundException exception
+	) {
+		ApiErrorResponse response = new ApiErrorResponse(
+			"GALLERY_PHOTO_NOT_FOUND",
+			exception.getMessage(),
+			Map.of()
+		);
+
+		return ResponseEntity
+			.status(HttpStatus.NOT_FOUND)
+			.body(response);
+	}
+
+	@ExceptionHandler(GalleryPhotoAccessDeniedException.class)
+	public ResponseEntity<ApiErrorResponse> handleGalleryPhotoAccessDeniedException(
+		GalleryPhotoAccessDeniedException exception
+	) {
+		ApiErrorResponse response = new ApiErrorResponse(
+			"GALLERY_PHOTO_ACCESS_DENIED",
+			exception.getMessage(),
+			Map.of()
+		);
+
+		return ResponseEntity
+			.status(HttpStatus.FORBIDDEN)
 			.body(response);
 	}
 

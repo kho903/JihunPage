@@ -8,7 +8,7 @@ import com.sisa.jihunpage.auth.dto.AuthenticatedMemberResponse;
 import com.sisa.jihunpage.auth.dto.LoginRequest;
 import com.sisa.jihunpage.auth.exception.InvalidCredentialsException;
 import com.sisa.jihunpage.auth.exception.UnauthenticatedException;
-import com.sisa.jihunpage.domain.Member;
+import com.sisa.jihunpage.member.domain.Member;
 import com.sisa.jihunpage.member.repository.MemberRepository;
 
 @Service

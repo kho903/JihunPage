@@ -1,7 +1,7 @@
 package com.sisa.jihunpage.member.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.sisa.jihunpage.domain.Member;
+import com.sisa.jihunpage.member.domain.Member;
 
 public record MemberSignupResponse(
 	Long id,

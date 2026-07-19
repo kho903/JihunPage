@@ -4,7 +4,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.sisa.jihunpage.domain.Member;
+import com.sisa.jihunpage.member.domain.Member;
 import com.sisa.jihunpage.member.dto.MemberSignupRequest;
 import com.sisa.jihunpage.member.dto.MemberSignupResponse;
 import com.sisa.jihunpage.member.exception.DuplicateUserIdException;

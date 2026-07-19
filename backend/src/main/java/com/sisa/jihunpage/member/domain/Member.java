@@ -1,4 +1,4 @@
-package com.sisa.jihunpage.domain;
+package com.sisa.jihunpage.member.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

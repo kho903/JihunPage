@@ -5,6 +5,10 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.BDDMockito.willThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -23,6 +27,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.sisa.jihunpage.BackendApplication;
 import com.sisa.jihunpage.auth.exception.UnauthenticatedException;
+import com.sisa.jihunpage.gallery.exception.GalleryPhotoAccessDeniedException;
+import com.sisa.jihunpage.gallery.exception.GalleryPhotoNotFoundException;
 import com.sisa.jihunpage.gallery.dto.GalleryPhotoCreateRequest;
 import com.sisa.jihunpage.gallery.dto.GalleryPhotoResponse;
 import com.sisa.jihunpage.gallery.service.GalleryService;
@@ -180,5 +186,124 @@ class GalleryPhotoControllerTest {
 
 		then(galleryService)
 			.shouldHaveNoInteractions();
+	}
+
+	@Test
+	void deletesGalleryPhotoWhenOwnerIsAuthenticated()
+		throws Exception {
+
+		willDoNothing()
+			.given(galleryService)
+			.deletePhoto(1L, 10L);
+
+		mockMvc.perform(
+				delete("/api/gallery/photos/{photoId}", 10L)
+					.sessionAttr(LOGIN_MEMBER_ID, 1L)
+			)
+			.andExpect(status().isNoContent())
+			.andExpect(content().string(""));
+
+		then(galleryService)
+			.should()
+			.deletePhoto(1L, 10L);
+	}
+
+	@Test
+	void returnsUnauthorizedWhenDeletingWithoutAuthentication()
+		throws Exception {
+
+		willThrow(new UnauthenticatedException())
+			.given(galleryService)
+			.deletePhoto(isNull(), eq(10L));
+
+		mockMvc.perform(
+				delete("/api/gallery/photos/{photoId}", 10L)
+			)
+			.andExpect(status().isUnauthorized())
+			.andExpect(
+				jsonPath("$.code")
+					.value("UNAUTHENTICATED")
+			)
+			.andExpect(
+				jsonPath("$.message")
+					.value("로그인이 필요합니다.")
+			)
+			.andExpect(
+				jsonPath("$.errors").isEmpty()
+			);
+
+		then(galleryService)
+			.should()
+			.deletePhoto(isNull(), eq(10L));
+	}
+
+	@Test
+	void returnsForbiddenWhenDeletingAnotherMembersPhoto()
+		throws Exception {
+
+		willThrow(
+			new GalleryPhotoAccessDeniedException()
+		)
+			.given(galleryService)
+			.deletePhoto(2L, 10L);
+
+		mockMvc.perform(
+				delete("/api/gallery/photos/{photoId}", 10L)
+					.sessionAttr(LOGIN_MEMBER_ID, 2L)
+			)
+			.andExpect(status().isForbidden())
+			.andExpect(
+				jsonPath("$.code")
+					.value(
+						"GALLERY_PHOTO_ACCESS_DENIED"
+					)
+			)
+			.andExpect(
+				jsonPath("$.message")
+					.value(
+						"본인의 갤러리 사진만 삭제할 수 있습니다."
+					)
+			)
+			.andExpect(
+				jsonPath("$.errors").isEmpty()
+			);
+
+		then(galleryService)
+			.should()
+			.deletePhoto(2L, 10L);
+	}
+
+	@Test
+	void returnsNotFoundWhenDeletingMissingPhoto()
+		throws Exception {
+
+		willThrow(
+			new GalleryPhotoNotFoundException(999L)
+		)
+			.given(galleryService)
+			.deletePhoto(1L, 999L);
+
+		mockMvc.perform(
+				delete("/api/gallery/photos/{photoId}", 999L)
+					.sessionAttr(LOGIN_MEMBER_ID, 1L)
+			)
+			.andExpect(status().isNotFound())
+			.andExpect(
+				jsonPath("$.code")
+					.value("GALLERY_PHOTO_NOT_FOUND")
+			)
+			.andExpect(
+				jsonPath("$.message")
+					.value(
+						"갤러리 사진을 찾을 수 없습니다: 999"
+					)
+			)
+			.andExpect(
+				jsonPath("$.errors").isEmpty()
+			);
+
+		then(galleryService)
+			.should()
+			.deletePhoto(1L, 999L);
 	}
 }

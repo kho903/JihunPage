@@ -21,3 +21,12 @@ spring:
     console:
       enabled: true
       path: /h2-console
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+app:
+  gallery:
+    upload-directory: ./uploads/gallery

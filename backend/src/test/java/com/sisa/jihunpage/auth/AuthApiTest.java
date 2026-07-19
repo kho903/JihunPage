@@ -18,7 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sisa.jihunpage.domain.Member;
+import com.sisa.jihunpage.member.domain.Member;
 import com.sisa.jihunpage.member.repository.MemberRepository;
 
 @SpringBootTest

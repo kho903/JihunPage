@@ -1,10 +1,9 @@
-package com.sisa.jihunpage.auth.dto;
+package com.sisa.jihunpage.gallery.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sisa.jihunpage.member.domain.Member;
 
-public record AuthenticatedMemberResponse(
-	Long id,
+public record GalleryOwnerResponse(
 
 	@JsonProperty("userid")
 	String userId,
@@ -12,9 +11,8 @@ public record AuthenticatedMemberResponse(
 	String username
 ) {
 
-	public static AuthenticatedMemberResponse from(Member member) {
-		return new AuthenticatedMemberResponse(
-			member.getId(),
+	public static GalleryOwnerResponse from(Member member) {
+		return new GalleryOwnerResponse(
 			member.getUserId(),
 			member.getUsername()
 		);

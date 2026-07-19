@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.sisa.jihunpage.auth.exception.InvalidCredentialsException;
 import com.sisa.jihunpage.auth.exception.UnauthenticatedException;
+import com.sisa.jihunpage.gallery.exception.GalleryOwnerNotFoundException;
 import com.sisa.jihunpage.member.exception.DuplicateUserIdException;
 
 @RestControllerAdvice
@@ -88,6 +89,20 @@ public class GlobalExceptionHandler {
 			.body(response);
 	}
 
+	@ExceptionHandler(GalleryOwnerNotFoundException.class)
+	public ResponseEntity<ApiErrorResponse> handleGalleryOwnerNotFoundException(
+		GalleryOwnerNotFoundException exception
+	) {
+		ApiErrorResponse response = new ApiErrorResponse(
+			"GALLERY_OWNER_NOT_FOUND",
+			exception.getMessage(),
+			Map.of()
+		);
+
+		return ResponseEntity
+			.status(HttpStatus.NOT_FOUND)
+			.body(response);
+	}
 
 	private String convertFieldName(String fieldName) {
 		return switch (fieldName) {

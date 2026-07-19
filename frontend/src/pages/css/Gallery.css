@@ -32,11 +32,19 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 4px;
 }
-
-.gallery-photo-item {
-  aspect-ratio: 1 / 1;
+.gallery-photo-button {
+  width: 100%;
+  padding: 0;
   overflow: hidden;
+  aspect-ratio: 1 / 1;
   background-color: #f1f3f5;
+  border: 0;
+  cursor: pointer;
+}
+
+.gallery-photo-button:focus-visible {
+  outline: 3px solid #0d6efd;
+  outline-offset: -3px;
 }
 
 .gallery-photo-image {
@@ -47,7 +55,7 @@
   transition: transform 0.2s ease;
 }
 
-.gallery-photo-item:hover .gallery-photo-image {
+.gallery-photo-button:hover .gallery-photo-image {
   transform: scale(1.03);
 }
 

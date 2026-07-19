@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 
 import { getPublicGallery } from "../api/galleryApi";
+import PhotoModal from "../components/gallery/PhotoModal";
 
 import "./css/Gallery.css";
 
@@ -11,6 +12,7 @@ function Gallery() {
   const [gallery, setGallery] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -50,6 +52,14 @@ function Gallery() {
       abortController.abort();
     };
   }, [userid]);
+
+  const openPhotoModal = (photo) => {
+    setSelectedPhoto(photo);
+  };
+
+  const closePhotoModal = () => {
+    setSelectedPhoto(null);
+  };
 
   if (loading) {
     return (
@@ -100,15 +110,24 @@ function Gallery() {
       ) : (
         <div className="gallery-grid">
           {photos.map((photo) => (
-            <article key={photo.id} className="gallery-photo-item">
+            <button
+              key={photo.id}
+              type="button"
+              className="gallery-photo-button"
+              aria-label={`${photo.title} 사진 크게 보기`}
+              onClick={() => openPhotoModal(photo)}
+            >
               <img
                 className="gallery-photo-image"
                 src={photo.imageUrl}
                 alt={photo.title || "갤러리 사진"}
               />
-            </article>
+            </button>
           ))}
         </div>
+      )}
+      {selectedPhoto && (
+        <PhotoModal photo={selectedPhoto} onClose={closePhotoModal} />
       )}
     </section>
   );

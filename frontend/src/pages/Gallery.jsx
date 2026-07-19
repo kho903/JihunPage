@@ -3,6 +3,8 @@ import { useParams } from "react-router";
 
 import { getPublicGallery } from "../api/galleryApi";
 
+import "./css/Gallery.css";
+
 function Gallery() {
   const { userid } = useParams();
 
@@ -32,6 +34,7 @@ function Gallery() {
 
         setError({
           status: requestError.status,
+          code: requestError.code,
           message: requestError.message,
         });
       } finally {
@@ -50,42 +53,64 @@ function Gallery() {
 
   if (loading) {
     return (
-      <main className="container py-5 text-center">
+      <section className="gallery-state">
         <p className="text-secondary mb-0">갤러리를 불러오는 중입니다...</p>
-      </main>
+      </section>
     );
   }
 
-  if (error?.status === 404) {
+  if (error?.code === "GALLERY_OWNER_NOT_FOUND") {
     return (
-      <main className="container py-5 text-center">
+      <section className="gallery-state">
         <h1 className="mb-3">Gallery</h1>
 
         <p className="text-secondary mb-0">존재하지 않는 회원입니다.</p>
-      </main>
+      </section>
     );
   }
 
   if (error) {
     return (
-      <main className="container py-5 text-center">
+      <section className="gallery-state">
         <h1 className="mb-3">Gallery</h1>
 
         <p className="text-danger mb-0">{error.message}</p>
-      </main>
+      </section>
     );
   }
 
+  const { owner, photos } = gallery;
+
   return (
-    <main className="container py-5">
-      <section className="text-center">
-        <h1 className="mb-2">{gallery.owner.username}&apos;s Gallery</h1>
+    <section className="gallery-page">
+      <header className="gallery-header">
+        <h1 className="gallery-title">{owner.username}&apos;s Gallery</h1>
 
-        <p className="text-secondary mb-2">@{gallery.owner.userid}</p>
+        <p className="gallery-userid">@{owner.userid}</p>
 
-        <p className="mb-0">사진 {gallery.photos.length}장</p>
-      </section>
-    </main>
+        <p className="gallery-count">사진 {photos.length}장</p>
+      </header>
+
+      {photos.length === 0 ? (
+        <div className="gallery-empty">
+          <p className="mb-2">아직 등록된 사진이 없습니다.</p>
+
+          <p className="text-secondary mb-0">첫 번째 사진을 등록해 보세요.</p>
+        </div>
+      ) : (
+        <div className="gallery-grid">
+          {photos.map((photo) => (
+            <article key={photo.id} className="gallery-photo-item">
+              <img
+                className="gallery-photo-image"
+                src={photo.imageUrl}
+                alt={photo.title || "갤러리 사진"}
+              />
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 

@@ -11,6 +11,8 @@ import com.sisa.jihunpage.gallery.dto.GalleryPhotoCreateRequest;
 import com.sisa.jihunpage.gallery.dto.GalleryPhotoResponse;
 import com.sisa.jihunpage.gallery.dto.MemberGalleryResponse;
 import com.sisa.jihunpage.gallery.exception.GalleryOwnerNotFoundException;
+import com.sisa.jihunpage.gallery.exception.GalleryPhotoAccessDeniedException;
+import com.sisa.jihunpage.gallery.exception.GalleryPhotoNotFoundException;
 import com.sisa.jihunpage.gallery.repository.GalleryPhotoRepository;
 import com.sisa.jihunpage.gallery.storage.GalleryImageStorage;
 import com.sisa.jihunpage.gallery.storage.StoredGalleryImage;
@@ -49,6 +51,7 @@ public class GalleryService {
 		);
 	}
 
+	@Transactional
 	public GalleryPhotoResponse createPhoto(
 		Long authenticatedMemberId,
 		GalleryPhotoCreateRequest request
@@ -56,7 +59,6 @@ public class GalleryService {
 		Member member = findAuthenticatedMember(authenticatedMemberId);
 
 		StoredGalleryImage storedImage = galleryImageStorage.store(request.getImage());
-
 
 		try {
 			GalleryPhoto galleryPhoto = new GalleryPhoto(
@@ -90,6 +92,33 @@ public class GalleryService {
 		}
 	}
 
+	@Transactional
+	public void deletePhoto(
+		Long authenticatedMemberId,
+		Long photoId
+	) {
+		Member authenticatedMember = findAuthenticatedMember(authenticatedMemberId);
+
+		GalleryPhoto galleryPhoto = galleryPhotoRepository.findById(photoId)
+			.orElseThrow(
+				() -> new GalleryPhotoNotFoundException(
+					photoId
+				)
+			);
+
+		validatePhotoOwner(
+			galleryPhoto,
+			authenticatedMember
+		);
+
+		String storedFileName = galleryPhoto.getStoredFileName();
+
+		galleryPhotoRepository.delete(galleryPhoto);
+		galleryPhotoRepository.flush();
+
+		galleryImageStorage.delete(storedFileName);
+	}
+
 	private Member findAuthenticatedMember(
 		Long authenticatedMemberId
 	) {
@@ -100,6 +129,14 @@ public class GalleryService {
 		return memberRepository.
 			findById(authenticatedMemberId)
 			.orElseThrow(UnauthenticatedException::new);
+	}
+
+	private void validatePhotoOwner(GalleryPhoto galleryPhoto, Member authenticatedMember) {
+		Long photoOwnerId = galleryPhoto.getMember().getId();
+
+		if (!photoOwnerId.equals(authenticatedMember.getId())) {
+			throw new GalleryPhotoAccessDeniedException();
+		}
 	}
 
 	private String normalizeOptionalValue(String value) {

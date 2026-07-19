@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
-import { useLocation, useParams } from "react-router";
+import { Link, useLocation, useParams } from "react-router";
 
 import { getPublicGallery } from "../api/galleryApi";
 import PhotoModal from "../components/gallery/PhotoModal";
+import { useAuth } from "../context/useAuth";
 
 import "./css/Gallery.css";
 
 function Gallery() {
   const { userid } = useParams();
+  const { currentMember } = useAuth();
   const location = useLocation();
 
   const [gallery, setGallery] = useState(null);
@@ -92,6 +94,7 @@ function Gallery() {
   }
 
   const { owner, photos } = gallery;
+  const isOwner = currentMember?.userid === owner.userid;
 
   return (
     <section className="gallery-page">
@@ -101,6 +104,13 @@ function Gallery() {
         <p className="gallery-userid">@{owner.userid}</p>
 
         <p className="gallery-count">사진 {photos.length}장</p>
+        {isOwner && (
+          <div className="gallery-header-actions">
+            <Link to="/gallery/upload" className="btn btn-primary">
+              사진 등록
+            </Link>
+          </div>
+        )}
       </header>
 
       {photos.length === 0 ? (

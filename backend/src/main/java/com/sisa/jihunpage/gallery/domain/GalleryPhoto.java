@@ -23,6 +23,18 @@ public class GalleryPhoto {
 	public GalleryPhoto() {
 	}
 
+	public GalleryPhoto(Member member, String title, String description, String location, LocalDate takenAt,
+		String imageUrl, String storedFileName, String originalFileName) {
+		this.member = member;
+		this.title = title;
+		this.description = description;
+		this.location = location;
+		this.takenAt = takenAt;
+		this.imageUrl = imageUrl;
+		this.storedFileName = storedFileName;
+		this.originalFileName = originalFileName;
+	}
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;

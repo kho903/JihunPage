@@ -1,0 +1,60 @@
+export async function getPublicGallery(userid, signal) {
+  const encodedUserid = encodeURIComponent(userid);
+
+  const response = await fetch(`/api/members/${encodedUserid}/gallery`, {
+    method: "GET",
+    signal,
+    cache: "no-store",
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const error = new Error(data?.message || "갤러리를 불러오지 못했습니다.");
+
+    error.status = response.status;
+    error.code = data?.code;
+
+    throw error;
+  }
+
+  return data;
+}
+
+export async function uploadGalleryPhoto(formData) {
+  const response = await fetch("/api/gallery/photos", {
+    method: "POST",
+    body: formData,
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const error = new Error(data?.message || "사진을 업로드하지 못했습니다.");
+
+    error.status = response.status;
+    error.code = data?.code;
+    error.errors = data?.errors;
+
+    throw error;
+  }
+
+  return data;
+}
+
+export async function deleteGalleryPhoto(photoId) {
+  const response = await fetch(`/api/gallery/photos/${photoId}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => null);
+
+    const error = new Error(data?.message || "사진을 삭제하지 못했습니다.");
+
+    error.status = response.status;
+    error.code = data?.code;
+
+    throw error;
+  }
+}

@@ -75,10 +75,8 @@ function Projects() {
             <div className="col-lg-4" key={project.id}>
               <article className="card h-100 shadow-sm">
                 <div className="card-body d-flex flex-column p-4">
-                  <div className="mb-3">
-                    <span className="badge text-bg-primary me-2">
-                      {project.type}
-                    </span>
+                  <div className="d-flex flex-column align-items-start gap-2 mb-3">
+                    <span className="home-tag">{project.type}</span>
 
                     <span className="text-secondary small">
                       {project.period}

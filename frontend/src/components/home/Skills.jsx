@@ -110,9 +110,9 @@ const skillGroups = [
 ];
 
 const statusClassMap = {
-  Experienced: "text-bg-primary",
-  Learning: "text-bg-success",
-  Planned: "text-bg-secondary",
+  Experienced: "skill-status-experienced",
+  Learning: "skill-status-learning",
+  Planned: "skill-status-planned",
 };
 
 function Skills() {
@@ -144,7 +144,7 @@ function Skills() {
                       >
                         <span className="fw-semibold me-2">{skill.name}</span>
                         <span
-                          className={`badge ${statusClassMap[skill.status]}`}
+                          className={`skill-status ${statusClassMap[skill.status]}`}
                         >
                           {skill.status}
                         </span>

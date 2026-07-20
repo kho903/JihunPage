@@ -67,10 +67,7 @@ function Header() {
                 </NavLink>
               </li>
               <li className="nav-item">
-                <NavLink
-                  className={getNavLinkClass}
-                  to="/members/jihun_01/gallery"
-                >
+                <NavLink className={getNavLinkClass} to="/gallery">
                   Gallery
                 </NavLink>
               </li>

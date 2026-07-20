@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router";
 
-import { getPublicGallery } from "../api/galleryApi";
+import { deleteGalleryPhoto, getPublicGallery } from "../api/galleryApi";
 import PhotoModal from "../components/gallery/PhotoModal";
 import { useAuth } from "../context/useAuth";
 
@@ -16,6 +16,7 @@ function Gallery() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const refreshGallery = location.state?.refreshGallery;
   useEffect(() => {
@@ -63,6 +64,36 @@ function Gallery() {
 
   const closePhotoModal = () => {
     setSelectedPhoto(null);
+  };
+  const handleDeletePhoto = async (photoId) => {
+    const confirmed = window.confirm("이 사진을 삭제하시겠습니까?");
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeleting(true);
+
+    try {
+      await deleteGalleryPhoto(photoId);
+
+      setGallery((previousGallery) => ({
+        ...previousGallery,
+        photos: previousGallery.photos.filter((photo) => photo.id !== photoId),
+      }));
+
+      setSelectedPhoto(null);
+    } catch (requestError) {
+      if (requestError.status === 403) {
+        window.alert("본인의 사진만 삭제할 수 있습니다.");
+      } else if (requestError.status === 404) {
+        window.alert("이미 삭제되었거나 존재하지 않는 사진입니다.");
+      } else {
+        window.alert(requestError.message);
+      }
+    } finally {
+      setDeleting(false);
+    }
   };
 
   if (loading) {
@@ -139,7 +170,13 @@ function Gallery() {
         </div>
       )}
       {selectedPhoto && (
-        <PhotoModal photo={selectedPhoto} onClose={closePhotoModal} />
+        <PhotoModal
+          photo={selectedPhoto}
+          onClose={closePhotoModal}
+          canDelete={isOwner}
+          deleting={deleting}
+          onDelete={handleDeletePhoto}
+        />
       )}
     </section>
   );

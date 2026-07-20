@@ -41,3 +41,20 @@ export async function uploadGalleryPhoto(formData) {
 
   return data;
 }
+
+export async function deleteGalleryPhoto(photoId) {
+  const response = await fetch(`/api/gallery/photos/${photoId}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => null);
+
+    const error = new Error(data?.message || "사진을 삭제하지 못했습니다.");
+
+    error.status = response.status;
+    error.code = data?.code;
+
+    throw error;
+  }
+}

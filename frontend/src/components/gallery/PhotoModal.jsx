@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 import "../css/PhotoModal.css";
 
-function PhotoModal({ photo, onClose }) {
+function PhotoModal({ photo, onClose, canDelete, deleting, onDelete }) {
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
 
@@ -69,6 +69,19 @@ function PhotoModal({ photo, onClose }) {
 
           {photo.description && (
             <p className="photo-modal-description">{photo.description}</p>
+          )}
+
+          {canDelete && (
+            <div className="photo-modal-actions">
+              <button
+                type="button"
+                className="btn btn-outline-danger"
+                disabled={deleting}
+                onClick={() => onDelete(photo.id)}
+              >
+                {deleting ? "삭제 중..." : "사진 삭제"}
+              </button>
+            </div>
           )}
         </div>
       </section>

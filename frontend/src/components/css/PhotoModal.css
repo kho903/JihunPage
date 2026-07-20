@@ -109,4 +109,12 @@
     padding: 28px 20px;
     overflow: visible;
   }
+
+  .photo-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 24px;
+    margin-top: 24px;
+    border-top: 1px solid #dee2e6;
+  }
 }

@@ -17,3 +17,90 @@ input,
 textarea {
   font: inherit;
 }
+:root {
+  --color-primary: #e78fb3;
+  --color-primary-dark: #d26f99;
+  --color-primary-light: #fde8f1;
+
+  --color-text: #442f38;
+  --color-text-muted: #806b74;
+
+  --color-background: #fff8fb;
+  --color-surface: #ffffff;
+  --color-border: #f1cfdd;
+}
+
+body {
+  color: var(--color-text);
+  background-color: var(--color-background);
+}
+
+/* 일반 링크 */
+a {
+  color: var(--color-primary);
+}
+
+a:hover {
+  color: var(--color-primary-dark);
+}
+.btn-primary {
+  --bs-btn-color: #ffffff;
+  --bs-btn-bg: var(--color-primary);
+  --bs-btn-border-color: var(--color-primary);
+
+  --bs-btn-hover-color: #ffffff;
+  --bs-btn-hover-bg: var(--color-primary-dark);
+  --bs-btn-hover-border-color: var(--color-primary-dark);
+
+  --bs-btn-focus-shadow-rgb: 231, 143, 179;
+
+  --bs-btn-active-color: #ffffff;
+  --bs-btn-active-bg: var(--color-primary-dark);
+  --bs-btn-active-border-color: var(--color-primary-dark);
+
+  --bs-btn-disabled-color: #ffffff;
+  --bs-btn-disabled-bg: #f3c7d8;
+  --bs-btn-disabled-border-color: #f3c7d8;
+}
+
+.btn-outline-primary {
+  --bs-btn-color: #c75f89;
+  --bs-btn-border-color: var(--color-primary);
+
+  --bs-btn-hover-color: #442f38;
+  --bs-btn-hover-bg: var(--color-primary-light);
+  --bs-btn-hover-border-color: var(--color-primary);
+
+  --bs-btn-focus-shadow-rgb: 231, 143, 179;
+
+  --bs-btn-active-color: #ffffff;
+  --bs-btn-active-bg: var(--color-primary-dark);
+  --bs-btn-active-border-color: var(--color-primary-dark);
+}
+
+/* Bootstrap primary 관련 색상 */
+.text-primary {
+  color: var(--color-primary) !important;
+}
+
+.bg-primary {
+  background-color: var(--color-primary) !important;
+}
+
+.border-primary {
+  border-color: var(--color-primary) !important;
+}
+.form-control:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 0.25rem rgba(231, 143, 179, 0.2);
+}
+
+.form-check-input:checked {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.form-check-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 0.25rem rgba(231, 143, 179, 0.2);
+}

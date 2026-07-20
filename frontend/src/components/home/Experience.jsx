@@ -111,9 +111,7 @@ function Experience() {
             <div className="col-lg-6" key={experience.id}>
               <article className="border rounded-3 p-4 h-100">
                 <div className="d-flex flex-wrap align-items-center gap-2 mb-3">
-                  <span className="badge rounded-pill text-bg-primary">
-                    {experience.category}
-                  </span>
+                  <span className="home-tag">{experience.category}</span>
 
                   <span className="text-secondary fw-semibold">
                     {experience.period}

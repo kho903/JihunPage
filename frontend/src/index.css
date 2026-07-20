@@ -35,7 +35,6 @@ body {
   background-color: var(--color-background);
 }
 
-/* 일반 링크 */
 a {
   color: var(--color-primary);
 }
@@ -78,7 +77,6 @@ a:hover {
   --bs-btn-active-border-color: var(--color-primary-dark);
 }
 
-/* Bootstrap primary 관련 색상 */
 .text-primary {
   color: var(--color-primary) !important;
 }
@@ -103,4 +101,53 @@ a:hover {
 .form-check-input:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 0.25rem rgba(231, 143, 179, 0.2);
+}
+
+.home-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.8rem;
+
+  color: #9f4f70;
+  background-color: var(--color-primary-light);
+  border: 1px solid #efbfd2;
+  border-radius: 999px;
+
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.skill-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.75rem;
+
+  border: 1px solid transparent;
+  border-radius: 999px;
+
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.skill-status-experienced {
+  color: #9f4f70;
+  background-color: var(--color-primary-light);
+  border-color: #efbfd2;
+}
+
+.skill-status-learning {
+  color: #ffffff;
+  background-color: #8f5aa8;
+  border-color: #8f5aa8;
+}
+
+.skill-status-planned {
+  color: #ffffff;
+  background-color: #6c757d;
+  border-color: #6c757d;
 }

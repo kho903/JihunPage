@@ -6,6 +6,8 @@ services:
     ports:
       - "8080:8080"
     volumes:
+      - ./backend:/app
+      - backend_gradle_cache:/home/gradle/.gradle
       - ./backend/uploads:/app/uploads
 
   frontend:
@@ -24,3 +26,4 @@ services:
 
 volumes:
   frontend_node_modules:
+  backend_gradle_cache:

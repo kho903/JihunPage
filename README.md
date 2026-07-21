@@ -1,28 +1,77 @@
 # JihunPage
 
-A personal introduction page built with React.
+A personal introduction website built with React and Spring Boot.
 
-## Current Scope
+JihunPage includes a personal profile page, session-based authentication, and a public gallery for each member.
 
-- Build the frontend first
-- Add a Spring Boot backend later
-- Implement signup and session-based login as a future feature
+## Features
+
+### Home
+
+- Personal introduction
+- Experience
+- Skills
+- Projects
+- Contact information
+- Component-based page structure
+
+### Authentication
+
+- Member signup
+- Session-based login and logout
+- BCrypt password hashing
+- Current member state management with React Context
+
+### Gallery
+
+- Public gallery for each member
+- Image upload and deletion
+- Image detail modal
+- Owner-only upload and delete actions
+- Uploaded image file storage
 
 ## Tech Stack
 
-- React
-- Vite
+### Frontend
+
+- React 19
 - JavaScript
-- Bootstrap
+- Vite
+- Bootstrap 5
 - ESLint
+
+### Backend
+
+- Java 21
+- Spring Boot 3.5.16
+- Spring Web
+- Spring Data JPA
+- Bean Validation
+- Spring Security Crypto
+- H2 Database
+- Gradle
+
+### Development Environment
+
+- Docker
+- Docker Compose
 
 ## Project Structure
 
 ```text
 JihunPage/
+├── compose.yaml
 ├── backend/
 │   ├── gradle/
+│   │   └── wrapper/
 │   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/
+│   │   │   │   └── com/sisa/jihunpage/
+│   │   │   └── resources/
+│   │   └── test/
+│   ├── uploads/
+│   ├── Dockerfile.dev
 │   ├── build.gradle
 │   ├── gradlew
 │   ├── gradlew.bat
@@ -30,57 +79,103 @@ JihunPage/
 ├── frontend/
 │   ├── public/
 │   ├── src/
-│   │   ├── assets/
+│   │   ├── api/
+│   │   ├── components/
+│   │   │   └── home/
+│   │   ├── context/
+│   │   ├── hooks/
+│   │   ├── pages/
 │   │   ├── App.jsx
 │   │   ├── index.css
 │   │   └── main.jsx
+│   ├── .dockerignore
+│   ├── Dockerfile.dev
 │   ├── package.json
 │   └── vite.config.js
 └── README.md
 ```
 
-## Run Locally
+The project structure above shows the main directories and files only.
+
+## Run with Docker
+
+Docker Compose runs the React frontend and Spring Boot backend together.
+
+### Requirements
+
+- Docker
+- Docker Compose
+
+### Start the Application
+
+Run the following command from the project root:
 
 ```bash
-cd frontend
-npm install
-npm run dev
+docker compose up --build
 ```
 
-The development server runs at:
-```text
-http://localhost:5173
+After the containers start, open the following URLs:
+
+| Service    | URL                              |
+| ---------- | -------------------------------- |
+| Frontend   | http://localhost:5173            |
+| Backend    | http://localhost:8080            |
+| Health API | http://localhost:8080/api/health |
+| H2 Console | http://localhost:8080/h2-console |
+
+### Stop the Application
+
+```bash
+docker compose down
 ```
 
-## Backend
+### Development
 
-The backend API is built with Spring Boot and uses an in-memory H2 database during development.
+Frontend source changes are automatically reflected through Vite HMR.
 
-### Tech Stack
+After changing backend source code, restart the backend container:
 
-- Java 21
-- Spring Boot 3.5.16
-- Spring Web
-- Spring Data JPA
-- Bean Validation
-- H2 Database
-- Gradle
+```bash
+docker compose restart backend
+```
+
+View all container logs:
+
+```bash
+docker compose logs -f
+```
+
+View only backend logs:
+
+```bash
+docker compose logs -f backend
+```
+
+View only frontend logs:
+
+```bash
+docker compose logs -f frontend
+```
+
+## Run Manually
+
+The frontend and backend can also be started without Docker.
 
 ### Run the Backend
 
-Move to the backend directory.
+Move to the backend directory:
 
 ```bash
 cd backend
 ```
 
-Run the tests.
+Run the tests:
 
 ```bash
 ./gradlew test
 ```
 
-Start the Spring Boot application.
+Start the Spring Boot application:
 
 ```bash
 ./gradlew bootRun
@@ -92,7 +187,33 @@ The backend server runs at:
 http://localhost:8080
 ```
 
-### Health Check
+### Run the Frontend
+
+Open another terminal and move to the frontend directory:
+
+```bash
+cd frontend
+```
+
+Install the dependencies:
+
+```bash
+npm install
+```
+
+Start the Vite development server:
+
+```bash
+npm run dev
+```
+
+The frontend development server runs at:
+
+```text
+http://localhost:5173
+```
+
+## Health Check
 
 Send a request to the following endpoint:
 
@@ -108,7 +229,7 @@ Expected response:
 }
 ```
 
-### H2 Console
+## H2 Console
 
 The H2 Console is available at:
 
@@ -124,4 +245,21 @@ User Name: sa
 Password: leave empty
 ```
 
-The current H2 database runs in memory, so stored data is deleted when the backend application stops.
+## Current Limitations
+
+The project currently uses an H2 in-memory database.
+
+Member and gallery data are deleted when the backend application or container restarts.
+
+Uploaded image files remain in the local `backend/uploads` directory, but their database records are deleted when the H2 database is reset.
+
+## Planned Improvements
+
+- Replace H2 with MySQL
+- Add persistent database storage
+- Add Nginx
+- Create production Docker images
+- Deploy the application to AWS
+- Add gallery pagination
+- Add a guestbook feature
+- Refactor the frontend styling and backend package structure

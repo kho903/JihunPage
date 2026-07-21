@@ -1,0 +1,11 @@
+FROM gradle:jdk21
+
+WORKDIR /app
+
+COPY --chown=gradle:gradle . .
+
+RUN chmod +x gradlew
+
+EXPOSE 8080
+
+CMD ["./gradlew", "bootrun", "--no-daemon"]

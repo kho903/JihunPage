@@ -1,11 +1,14 @@
-FROM gradle:jdk21
+FROM eclipse-temurin:21-jdk-alpine
 
 WORKDIR /app
 
-COPY --chown=gradle:gradle . .
+ENV GRADLE_USER_HOME=/home/gradle/.gradle
 
-RUN chmod +x gradlew
+COPY . .
+
+RUN chmod +x gradlew \
+    && mkdir -p ${GRADLE_USER_HOME}
 
 EXPOSE 8080
 
-CMD ["./gradlew", "bootrun", "--no-daemon"]
+CMD ["./gradlew", "bootRun", "--no-daemon"]

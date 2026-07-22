@@ -48,8 +48,13 @@ JihunPage includes a personal profile page, session-based authentication, and a 
 - Spring Data JPA
 - Bean Validation
 - Spring Security Crypto
-- H2 Database
+- MySQL Connector/J
 - Gradle
+
+### Database
+
+- MySQL 8.4 LTS
+- Docker named volume for data persistence
 
 ### Development Environment
 
@@ -61,14 +66,15 @@ JihunPage includes a personal profile page, session-based authentication, and a 
 ```text
 JihunPage/
 ├── compose.yaml
+├── .env.example
 ├── backend/
 │   ├── gradle/
 │   │   └── wrapper/
 │   ├── src/
 │   │   ├── main/
 │   │   │   ├── java/
-│   │   │   │   └── com/sisa/jihunpage/
 │   │   │   └── resources/
+│   │   │       └── application.yaml
 │   │   └── test/
 │   ├── uploads/
 │   ├── Dockerfile.dev
@@ -81,7 +87,6 @@ JihunPage/
 │   ├── src/
 │   │   ├── api/
 │   │   ├── components/
-│   │   │   └── home/
 │   │   ├── context/
 │   │   ├── hooks/
 │   │   ├── pages/
@@ -92,6 +97,8 @@ JihunPage/
 │   ├── Dockerfile.dev
 │   ├── package.json
 │   └── vite.config.js
+├── docs/
+│   └── docker-development.md
 └── README.md
 ```
 
@@ -99,19 +106,31 @@ The project structure above shows the main directories and files only.
 
 ## Run with Docker
 
-Docker Compose runs the React frontend and Spring Boot backend together.
+Create a local `.env` file based on `.env.example`.
 
-### Requirements
+```bash
+cp .env.example .env
+```
 
-- Docker
-- Docker Compose
+Update the MySQL credentials in `.env`.
 
-### Start the Application
+```dotenv
+MYSQL_DATABASE=jihunpage
+MYSQL_USER=your_mysql_user
+MYSQL_PASSWORD=your_mysql_password
+MYSQL_ROOT_PASSWORD=your_mysql_root_password
+```
 
-Run the following command from the project root:
+Start the application from the project root:
 
 ```bash
 docker compose up --build
+```
+
+To run the containers in the background:
+
+```bash
+docker compose up -d --build
 ```
 
 After the containers start, open the following URLs:
@@ -121,15 +140,27 @@ After the containers start, open the following URLs:
 | Frontend   | http://localhost:5173            |
 | Backend    | http://localhost:8080            |
 | Health API | http://localhost:8080/api/health |
-| H2 Console | http://localhost:8080/h2-console |
+| MySQL      | localhost:3306                   |
 
-### Stop the Application
+Stop the application:
 
 ```bash
 docker compose down
 ```
 
-### Development
+MySQL data remains in the Docker named volume after running `docker compose down`.
+
+The following command also deletes the MySQL data volume:
+
+```bash
+docker compose down -v
+```
+
+## Documentation
+
+- [Docker Development Environment](docs/docker-development.md)
+
+## Development Workflow
 
 Frontend source changes are automatically reflected through Vite HMR.
 
@@ -145,21 +176,23 @@ View all container logs:
 docker compose logs -f
 ```
 
-View only backend logs:
+View backend logs:
 
 ```bash
 docker compose logs -f backend
 ```
 
-View only frontend logs:
+View MySQL logs:
 
 ```bash
-docker compose logs -f frontend
+docker compose logs -f mysql
 ```
 
 ## Run Manually
 
 The frontend and backend can also be started without Docker.
+
+A MySQL server must already be running before starting the backend manually.
 
 ### Run the Backend
 
@@ -167,6 +200,14 @@ Move to the backend directory:
 
 ```bash
 cd backend
+```
+
+Set the database connection environment variables:
+
+```bash
+export SPRING_DATASOURCE_URL="jdbc:mysql://localhost:3306/jihunpage"
+export SPRING_DATASOURCE_USERNAME="your_mysql_user"
+export SPRING_DATASOURCE_PASSWORD="your_mysql_password"
 ```
 
 Run the tests:
@@ -229,37 +270,35 @@ Expected response:
 }
 ```
 
-## H2 Console
+## Database Persistence
 
-The H2 Console is available at:
+MySQL data is stored in the `mysql_data` Docker named volume.
 
-```text
-http://localhost:8080/h2-console
+Member and gallery database records remain after restarting the backend:
+
+```bash
+docker compose restart backend
 ```
 
-Connection information:
+The records also remain after stopping and recreating the containers:
 
-```text
-JDBC URL: jdbc:h2:mem:jihunpage
-User Name: sa
-Password: leave empty
+```bash
+docker compose down
+docker compose up -d
 ```
 
-## Current Limitations
-
-The project currently uses an H2 in-memory database.
-
-Member and gallery data are deleted when the backend application or container restarts.
-
-Uploaded image files remain in the local `backend/uploads` directory, but their database records are deleted when the H2 database is reset.
+Uploaded gallery image files are stored in the local `backend/uploads` directory.
 
 ## Planned Improvements
 
-- Replace H2 with MySQL
-- Add persistent database storage
-- Add Nginx
+- Add Redis-based shared session storage
+- Add Nginx as a reverse proxy
+- Run multiple backend instances
+- Refactor authentication from Session to JWT
+- Add Access Token and Refresh Token support
+- Store Refresh Tokens in Redis
 - Create production Docker images
 - Deploy the application to AWS
 - Add gallery pagination
 - Add a guestbook feature
-- Refactor the frontend styling and backend package structure
+- Add database migration management with Flyway

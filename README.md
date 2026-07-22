@@ -68,6 +68,7 @@ JihunPage includes a personal profile page, session-based authentication, and a 
 
 - Docker
 - Docker Compose
+- Nginx
 
 ## Project Structure
 
@@ -90,6 +91,8 @@ JihunPage/
 │   ├── gradlew
 │   ├── gradlew.bat
 │   └── settings.gradle
+├── nginx/
+│   └── default.dev.conf
 ├── frontend/
 │   ├── public/
 │   ├── src/
@@ -111,6 +114,31 @@ JihunPage/
 ```
 
 The project structure above shows the main directories and files only.
+
+## Development Architecture
+
+```text
+Browser
+   │
+   │ http://localhost
+   ▼
+Nginx :80
+   ├── /          → Frontend :5173
+   ├── /api       → Backend :8080
+   └── /uploads   → Backend :8080
+
+Backend
+   ├── MySQL :3306
+   └── Redis :6379
+```
+
+Nginx is the single entry point for the Docker development environment.
+
+- `/` requests are proxied to the Vite development server.
+- `/api` requests are proxied to the Spring Boot backend.
+- `/uploads` requests are proxied to the Spring Boot backend.
+- MySQL stores persistent application data.
+- Redis stores HTTP session data.
 
 ## Run with Docker
 
@@ -141,15 +169,22 @@ To run the containers in the background:
 docker compose up -d --build
 ```
 
-After the containers start, open the following URLs:
+After the containers start, open the application through Nginx:
 
-| Service    | URL                              |
-| ---------- | -------------------------------- |
-| Frontend   | http://localhost:5173            |
-| Backend    | http://localhost:8080            |
-| Health API | http://localhost:8080/api/health |
-| MySQL      | localhost:3306                   |
-| Redis      | localhost:6379                   |
+```text
+http://localhost
+```
+
+The following service addresses are available in the development environment:
+
+| Service     | URL                         | Purpose                              |
+| ----------- | --------------------------- | ------------------------------------ |
+| Application | http://localhost            | Main application entry point         |
+| Frontend    | http://localhost:5173       | Direct frontend access for debugging |
+| Backend     | http://localhost:8080       | Direct backend access for debugging  |
+| Health API  | http://localhost/api/health | Health check through Nginx           |
+| MySQL       | localhost:3306              | Application database                 |
+| Redis       | localhost:6379              | HTTP session storage                 |
 
 Stop the application:
 
@@ -157,9 +192,9 @@ Stop the application:
 docker compose down
 ```
 
-MySQL data remains in the Docker named volume after running `docker compose down`.
+MySQL data and Redis session data remain in Docker named volumes after running `docker compose down`.
 
-The following command also deletes the MySQL data volume:
+The following command also deletes the MySQL and Redis named volumes:
 
 ```bash
 docker compose down -v
@@ -197,27 +232,41 @@ View MySQL logs:
 docker compose logs -f mysql
 ```
 
+View Redis logs:
+
+```bash
+docker compose logs -f redis
+```
+
+View Nginx logs:
+
+```bash
+docker compose logs -f nginx
+```
+
 ## Run Manually
 
 The frontend and backend can also be started without Docker.
 
-A MySQL server must already be running before starting the backend manually.
+MySQL and Redis servers must already be running before starting the backend manually.
 
 ### Run the Backend
 
 Move to the backend directory:
 
-```bash
+````bash
 cd backend
 ```
 
-Set the database connection environment variables:
+Set the database and Redis connection environment variables:
 
 ```bash
 export SPRING_DATASOURCE_URL="jdbc:mysql://localhost:3306/jihunpage"
 export SPRING_DATASOURCE_USERNAME="your_mysql_user"
 export SPRING_DATASOURCE_PASSWORD="your_mysql_password"
-```
+export SPRING_DATA_REDIS_HOST="localhost"
+export SPRING_DATA_REDIS_PORT="6379"
+````
 
 Run the tests:
 
@@ -268,7 +317,7 @@ http://localhost:5173
 Send a request to the following endpoint:
 
 ```text
-GET http://localhost:8080/api/health
+GET http://localhost/api/health
 ```
 
 Expected response:
@@ -314,8 +363,9 @@ docker compose down -v
 
 ## Planned Improvements
 
-- Add Nginx as a reverse proxy
 - Run multiple backend instances
+- Configure Nginx load balancing
+- Verify Redis-backed sessions across backend instances
 - Refactor authentication from Session to JWT
 - Add Access Token and Refresh Token support
 - Store Refresh Tokens in Redis

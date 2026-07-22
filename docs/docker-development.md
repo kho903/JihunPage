@@ -4,6 +4,7 @@ This document describes the Docker-based development environment for JihunPage.
 
 Docker Compose runs the following services together:
 
+- Nginx reverse proxy
 - React frontend
 - Spring Boot backend
 - MySQL database
@@ -14,22 +15,27 @@ Docker Compose runs the following services together:
 ```text
 Browser
    │
+   │ http://localhost
    │ SESSION Cookie
    ▼
-React / Vite
+Nginx :80
+   ├── /          → frontend:5173
+   ├── /api       → backend:8080
+   └── /uploads   → backend:8080
+
+backend:8080
+   ├── mysql:3306
+   │      │
+   │      ▼
+   │  mysql_data
    │
-   ▼
-Spring Boot
-   ├──────────────► MySQL 8.4
-   │                  │
-   │                  ▼
-   │              mysql_data
-   │
-   └──────────────► Redis 7.4
-                      │
-                      ▼
-                  redis_data
+   └── redis:6379
+          │
+          ▼
+      redis_data
 ```
+
+Nginx is the single entry point for the Docker development environment.
 
 MySQL stores persistent application data such as members and gallery records.
 
@@ -71,13 +77,14 @@ docker compose up -d --build
 
 ## Service URLs
 
-| Service    | URL                              |
-| ---------- | -------------------------------- |
-| Frontend   | http://localhost:5173            |
-| Backend    | http://localhost:8080            |
-| Health API | http://localhost:8080/api/health |
-| MySQL      | localhost:3306                   |
-| Redis      | localhost:6379                   |
+| Service     | URL                         | Purpose                              |
+| ----------- | --------------------------- | ------------------------------------ |
+| Application | http://localhost            | Main entry point through Nginx       |
+| Frontend    | http://localhost:5173       | Direct frontend access for debugging |
+| Backend     | http://localhost:8080       | Direct backend access for debugging  |
+| Health API  | http://localhost/api/health | Backend health check through Nginx   |
+| MySQL       | localhost:3306              | Application database                 |
+| Redis       | localhost:6379              | HTTP session storage                 |
 
 ## Check Container Status
 
@@ -85,13 +92,14 @@ docker compose up -d --build
 docker compose ps
 ```
 
-The MySQL container should display a healthy status.
+The MySQL and Redis containers should display a healthy status.
 
 ```text
 mysql      running (healthy)
 redis      running (healthy)
 backend    running
 frontend   running
+nginx      running
 ```
 
 ## View Logs
@@ -118,6 +126,126 @@ View Redis logs:
 
 ```bash
 docker compose logs -f redis
+```
+
+View Nginx logs:
+
+```bash
+docker compose logs -f nginx
+```
+
+## Nginx Reverse Proxy
+
+Nginx is the single entry point for the Docker development environment.
+
+The Nginx configuration file is located at:
+
+```text
+nginx/default.dev.conf
+```
+
+Docker Compose mounts this file into the container as:
+
+```text
+/etc/nginx/conf.d/default.conf
+```
+
+The configuration file is mounted as read-only.
+
+### Proxy Routes
+
+Nginx routes requests according to their URL paths:
+
+| Request path | Target service  | Purpose                                       |
+| ------------ | --------------- | --------------------------------------------- |
+| `/`          | `frontend:5173` | React application and Vite development assets |
+| `/api`       | `backend:8080`  | Spring Boot REST APIs                         |
+| `/uploads`   | `backend:8080`  | Uploaded gallery images                       |
+
+For example:
+
+```text
+Browser request:
+http://localhost/api/auth/me
+
+Internal request:
+http://backend:8080/api/auth/me
+```
+
+The browser only needs to access `http://localhost`.
+
+Docker Compose service names such as `frontend` and `backend` work as hostnames inside the Docker network.
+
+### Vite Hot Module Replacement
+
+Vite uses a WebSocket connection for Hot Module Replacement.
+
+Nginx forwards the WebSocket upgrade headers so that frontend source changes are reflected without manually refreshing the browser.
+
+A successful WebSocket connection can be confirmed in the browser Network panel:
+
+```text
+Status Code: 101 Switching Protocols
+```
+
+### React Router
+
+Frontend routes are proxied to the Vite development server.
+
+Therefore, routes such as the following continue to work after browser refresh:
+
+```text
+/login
+/signup
+/gallery
+/members/{userid}/gallery
+```
+
+This behavior applies to the current Vite development environment.
+
+A production environment that serves React build files directly from Nginx will require an SPA fallback configuration.
+
+### Upload Size
+
+Nginx allows requests up to 6 MB:
+
+```nginx
+client_max_body_size 6m;
+```
+
+This matches the Spring Boot multipart request limit.
+
+Requests exceeding the limit may return:
+
+```text
+413 Request Entity Too Large
+```
+
+### Nginx Commands
+
+Test the configuration:
+
+```bash
+docker compose exec nginx nginx -t
+```
+
+View the configuration mounted inside the container:
+
+```bash
+docker compose exec nginx \
+  cat /etc/nginx/conf.d/default.conf
+```
+
+Restart Nginx:
+
+```bash
+docker compose restart nginx
+```
+
+View the latest Nginx logs:
+
+```bash
+docker compose logs --no-color --tail=100 nginx
 ```
 
 ## MySQL Connection
@@ -246,3 +374,45 @@ This deletes:
 Uploaded gallery images are stored in the local `backend/uploads` directory.
 
 Because this directory is bind-mounted from the host, uploaded files are not deleted when Docker named volumes are removed.
+
+## Troubleshooting
+
+### 502 Bad Gateway
+
+A `502 Bad Gateway` response means that Nginx is running, but it cannot connect to the frontend or backend service.
+
+Check the container status:
+
+```bash
+docker compose ps
+```
+
+Check the service logs:
+
+```bash
+docker compose logs --no-color --tail=100 nginx
+docker compose logs --no-color --tail=100 frontend
+docker compose logs --no-color --tail=100 backend
+```
+
+### Port 80 Is Already in Use
+
+If the Nginx container cannot start because port `80` is already allocated, check the process using the port on macOS:
+
+```bash
+sudo lsof -nP -iTCP:80 -sTCP:LISTEN
+```
+
+### Nginx Configuration Error
+
+Test the configuration:
+
+```bash
+docker compose exec nginx nginx -t
+```
+
+Then inspect the logs:
+
+```bash
+docker compose logs --no-color --tail=100 nginx
+```

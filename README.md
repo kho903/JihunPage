@@ -19,6 +19,7 @@ JihunPage includes a personal profile page, session-based authentication, and a 
 
 - Member signup
 - Session-based login and logout
+- Redis-backed shared HTTP session storage
 - BCrypt password hashing
 - Current member state management with React Context
 
@@ -48,6 +49,7 @@ JihunPage includes a personal profile page, session-based authentication, and a 
 - Spring Data JPA
 - Bean Validation
 - Spring Security Crypto
+- Spring Session
 - MySQL Connector/J
 - Gradle
 
@@ -55,6 +57,12 @@ JihunPage includes a personal profile page, session-based authentication, and a 
 
 - MySQL 8.4 LTS
 - Docker named volume for data persistence
+
+### Session Storage
+
+- Redis 7.4
+- Spring Session Data Redis
+- Redis-backed HTTP session persistence
 
 ### Development Environment
 
@@ -141,6 +149,7 @@ After the containers start, open the following URLs:
 | Backend    | http://localhost:8080            |
 | Health API | http://localhost:8080/api/health |
 | MySQL      | localhost:3306                   |
+| Redis      | localhost:6379                   |
 
 Stop the application:
 
@@ -270,7 +279,7 @@ Expected response:
 }
 ```
 
-## Database Persistence
+## Data and Session Persistence
 
 MySQL data is stored in the `mysql_data` Docker named volume.
 
@@ -280,7 +289,15 @@ Member and gallery database records remain after restarting the backend:
 docker compose restart backend
 ```
 
-The records also remain after stopping and recreating the containers:
+HTTP sessions are stored in Redis instead of the backend application's memory.
+
+Therefore, the authenticated session also remains after restarting the backend container:
+
+```bash
+docker compose restart backend
+```
+
+The database records and Redis session data remain after stopping and recreating the containers:
 
 ```bash
 docker compose down
@@ -289,9 +306,14 @@ docker compose up -d
 
 Uploaded gallery image files are stored in the local `backend/uploads` directory.
 
+The following command deletes the MySQL and Redis named volumes:
+
+```bash
+docker compose down -v
+```
+
 ## Planned Improvements
 
-- Add Redis-based shared session storage
 - Add Nginx as a reverse proxy
 - Run multiple backend instances
 - Refactor authentication from Session to JWT

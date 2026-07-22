@@ -7,24 +7,33 @@ Docker Compose runs the following services together:
 - React frontend
 - Spring Boot backend
 - MySQL database
+- Redis session store
 
 ## Architecture
 
 ```text
 Browser
    │
+   │ SESSION Cookie
    ▼
 React / Vite
    │
    ▼
 Spring Boot
+   ├──────────────► MySQL 8.4
+   │                  │
+   │                  ▼
+   │              mysql_data
    │
-   ▼
-MySQL 8.4
-   │
-   ▼
-Docker Volume
+   └──────────────► Redis 7.4
+                      │
+                      ▼
+                  redis_data
 ```
+
+MySQL stores persistent application data such as members and gallery records.
+
+Redis stores HTTP session data managed by Spring Session.
 
 ## Requirements
 
@@ -68,6 +77,7 @@ docker compose up -d --build
 | Backend    | http://localhost:8080            |
 | Health API | http://localhost:8080/api/health |
 | MySQL      | localhost:3306                   |
+| Redis      | localhost:6379                   |
 
 ## Check Container Status
 
@@ -79,6 +89,7 @@ The MySQL container should display a healthy status.
 
 ```text
 mysql      running (healthy)
+redis      running (healthy)
 backend    running
 frontend   running
 ```
@@ -103,6 +114,12 @@ View MySQL logs:
 docker compose logs -f mysql
 ```
 
+View Redis logs:
+
+```bash
+docker compose logs -f redis
+```
+
 ## MySQL Connection
 
 The Spring Boot backend connects to MySQL through the Docker Compose service name:
@@ -123,95 +140,109 @@ User: value of MYSQL_USER
 Password: value of MYSQL_PASSWORD
 ```
 
-## Check MySQL Version
+## Redis Session Storage
 
-```bash
-docker compose exec mysql sh -c \
-  'mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" -e "SELECT VERSION();"'
-```
-
-Expected version:
+The backend connects to Redis through the Docker Compose service name:
 
 ```text
-8.4.10
+redis:6379
 ```
 
-## Check Database Tables
+Spring Session stores HTTP sessions using the following namespace:
+
+```text
+jihunpage:session
+```
+
+After logging in, inspect the Redis session keys:
 
 ```bash
-docker compose exec mysql sh -c \
-  'mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" -e "SHOW TABLES;"'
+docker compose exec redis redis-cli \
+  --scan \
+  --pattern 'jihunpage:session:*'
 ```
 
-JPA creates the required tables when the backend starts.
+A session key looks similar to:
 
-## Data Persistence
+```text
+jihunpage:session:sessions:<session-id>
+```
 
-MySQL data is stored in the `mysql_data` Docker volume.
+Check the remaining session lifetime:
 
-The data remains after running:
+```bash
+docker compose exec redis redis-cli TTL \
+  "jihunpage:session:sessions:<session-id>"
+```
+
+A positive result represents the remaining session lifetime in seconds.
+
+```text
+1800
+1799
+1798
+```
+
+Inspect the fields stored in the session:
+
+```bash
+docker compose exec redis redis-cli HKEYS \
+  "jihunpage:session:sessions:<session-id>"
+```
+
+The session contains metadata and application session attributes such as:
+
+```text
+creationTime
+lastAccessedTime
+maxInactiveInterval
+sessionAttr:LOGIN_MEMBER_ID
+```
+
+The Spring Session cookie name is:
+
+```text
+SESSION
+```
+
+The session remains valid after restarting only the backend container:
 
 ```bash
 docker compose restart backend
 ```
 
-It also remains after stopping and recreating the containers:
+After the backend starts again, refresh the browser and verify that the authenticated state remains available.
+
+## Data Persistence
+
+MySQL application data is stored in the `mysql_data` Docker named volume.
+
+Redis session data is stored in the `redis_data` Docker named volume.
+
+Both remain after restarting the backend:
+
+```bash
+docker compose restart backend
+```
+
+They also remain after stopping and recreating the containers:
 
 ```bash
 docker compose down
 docker compose up -d
 ```
 
-The following command removes named volumes, including all MySQL data:
+The following command removes both named volumes:
 
 ```bash
 docker compose down -v
 ```
 
-Do not use `-v` when the database data must be preserved.
+This deletes:
 
-## Development Workflow
+- MySQL application data
+- Redis session data
 
-Frontend changes are automatically reflected through Vite HMR.
+Uploaded gallery images are stored in the local `backend/uploads` directory.
 
-After changing backend source code, restart the backend service:
-
-```bash
-docker compose restart backend
-```
-
-## Stop the Application
-
-```bash
-docker compose down
-```
-
-## Rebuild the Services
-
-Rebuild all services:
-
-```bash
-docker compose build
-```
-
-Rebuild only the backend:
-
-```bash
-docker compose build backend
-```
-
-Rebuild without using the Docker build cache:
-
-```bash
-docker compose build --no-cache
-```
-
-## Validate the Compose Configuration
-
-```bash
-docker compose config
-```
-
-This command validates the Compose file and resolves environment variables.
-
-The resolved output may contain database credentials, so it should not be shared publicly.
+Because this directory is bind-mounted from the host, uploaded files are not deleted when Docker named volumes are removed.

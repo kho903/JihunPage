@@ -99,63 +99,18 @@ The project structure above shows the main directories and files only.
 
 ## Run with Docker
 
-Docker Compose runs the React frontend and Spring Boot backend together.
-
-### Requirements
-
-- Docker
-- Docker Compose
-
-### Start the Application
-
-Run the following command from the project root:
+Create a `.env` file based on `.env.example`, and then run:
 
 ```bash
 docker compose up --build
 ```
 
-After the containers start, open the following URLs:
+- Frontend: http://localhost:5173
+- Backend: http://localhost:8080
 
-| Service    | URL                              |
-| ---------- | -------------------------------- |
-| Frontend   | http://localhost:5173            |
-| Backend    | http://localhost:8080            |
-| Health API | http://localhost:8080/api/health |
-| H2 Console | http://localhost:8080/h2-console |
+## Documentation
 
-### Stop the Application
-
-```bash
-docker compose down
-```
-
-### Development
-
-Frontend source changes are automatically reflected through Vite HMR.
-
-After changing backend source code, restart the backend container:
-
-```bash
-docker compose restart backend
-```
-
-View all container logs:
-
-```bash
-docker compose logs -f
-```
-
-View only backend logs:
-
-```bash
-docker compose logs -f backend
-```
-
-View only frontend logs:
-
-```bash
-docker compose logs -f frontend
-```
+- [Docker Development Environment](docs/docker-development.md)
 
 ## Run Manually
 

@@ -7,6 +7,16 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:jihun}
     password: ${SPRING_DATASOURCE_PASSWORD}
 
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+
+  session:
+    timeout: 30m
+    redis:
+      namespace: jihunpage:session
+
   jpa:
     open-in-view: false
     hibernate:

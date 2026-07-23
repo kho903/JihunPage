@@ -21,11 +21,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sisa.jihunpage.member.domain.Member;
 import com.sisa.jihunpage.member.repository.MemberRepository;
 
+import jakarta.servlet.http.Cookie;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 public class AuthApiTest {
 
 	public static final String LOGIN_MEMBER_ID = "LOGIN_MEMBER_ID";
+	private static final String SESSION_COOKIE_NAME = "SESSION";
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -62,11 +65,11 @@ public class AuthApiTest {
 			"jihun_01",
 			"Password1!"
 		);
-
 		MvcResult result = mockMvc.perform(post("/api/auth/login")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk())
+			.andExpect(cookie().exists(SESSION_COOKIE_NAME))
 			.andExpect(jsonPath("$.id").value(savedMember.getId()))
 			.andExpect(jsonPath("$.userid").value("jihun_01"))
 			.andExpect(jsonPath("$.username").value("김지훈"))
@@ -74,12 +77,16 @@ public class AuthApiTest {
 			.andExpect(jsonPath("$.userpwd").doesNotExist())
 			.andReturn();
 
-		MockHttpSession session =
-			(MockHttpSession)result.getRequest().getSession(false);
+		Cookie sessionCookie =
+			result.getResponse().getCookie(SESSION_COOKIE_NAME);
 
-		assertThat(session).isNotNull();
-		assertThat(session.getAttribute(LOGIN_MEMBER_ID))
-			.isEqualTo(savedMember.getId());
+		assertThat(sessionCookie).isNotNull();
+
+		mockMvc.perform(get("/api/auth/me")
+				.cookie(sessionCookie))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.id").value(savedMember.getId()))
+			.andExpect(jsonPath("$.userid").value("jihun_01"));
 	}
 
 	@Test
@@ -120,14 +127,16 @@ public class AuthApiTest {
 
 	@Test
 	void currentMemberReturnsAuthenticatedMember() throws Exception {
-		MockHttpSession session = loginAndGetSession();
+		Cookie sessionCookie = loginAndGetSessionCookie();
 
 		mockMvc.perform(get("/api/auth/me")
-				.session(session))
+				.cookie(sessionCookie))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.id").value(savedMember.getId()))
 			.andExpect(jsonPath("$.userid").value("jihun_01"))
-			.andExpect(jsonPath("$.username").value("김지훈"));
+			.andExpect(jsonPath("$.username").value("김지훈"))
+			.andExpect(jsonPath("$.password").doesNotExist())
+			.andExpect(jsonPath("$.userpwd").doesNotExist());
 	}
 
 	@Test
@@ -143,21 +152,18 @@ public class AuthApiTest {
 
 	@Test
 	void logoutInvalidatesAuthenticatedSession() throws Exception {
-		MockHttpSession session = loginAndGetSession();
+		Cookie sessionCookie = loginAndGetSessionCookie();
 
 		mockMvc.perform(post("/api/auth/logout")
-				.session(session))
+				.cookie(sessionCookie))
 			.andExpect(status().isNoContent());
 
-		assertThat(session.isInvalid()).isTrue();
-
-		mockMvc.perform(get("/api/auth/me"))
-			.andExpect(status().isUnauthorized())
-			.andExpect(jsonPath("$.code")
-				.value("UNAUTHENTICATED"));
+		mockMvc.perform(get("/api/auth/me")
+				.cookie(sessionCookie))
+			.andExpect(status().isUnauthorized());
 	}
 
-	private MockHttpSession loginAndGetSession() throws Exception {
+	private Cookie loginAndGetSessionCookie() throws Exception {
 		Map<String, String> request = createLoginRequest(
 			"jihun_01",
 			"Password1!"
@@ -167,14 +173,15 @@ public class AuthApiTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk())
+			.andExpect(cookie().exists(SESSION_COOKIE_NAME))
 			.andReturn();
 
-		MockHttpSession session =
-			(MockHttpSession)result.getRequest().getSession(false);
+		Cookie sessionCookie =
+			result.getResponse().getCookie(SESSION_COOKIE_NAME);
 
-		assertThat(session).isNotNull();
+		assertThat(sessionCookie).isNotNull();
 
-		return session;
+		return sessionCookie;
 	}
 
 	private Map<String, String> createLoginRequest(

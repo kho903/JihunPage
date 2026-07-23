@@ -1,0 +1,9 @@
+spring:
+  session:
+    redis:
+      namespace: jihunpage:test:session
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false

@@ -36,6 +36,61 @@ services:
       timeout: 3s
       retries: 10
       start_period: 5s
+  mysql-test:
+    image: mysql:8.4.10
+    profiles:
+      - test
+    environment:
+      MYSQL_DATABASE: jihunpage_test
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    tmpfs:
+      - /var/lib/mysql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD --silent",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+  redis-test:
+    image: redis:7.4.9-alpine
+    profiles:
+      - test
+    tmpfs:
+      - /data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  backend-test:
+    profiles:
+      - test
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    environment:
+      SPRING_PROFILES_ACTIVE: test
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql-test:3306/jihunpage_test?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8"
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_DATA_REDIS_HOST: redis-test
+      SPRING_DATA_REDIS_PORT: 6379
+    depends_on:
+      mysql-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    command: ["./gradlew", "test", "--no-daemon"]
+    volumes:
+      - backend_test_gradle_cache:/home/gradle/.gradle
 
   backend:
     build:
@@ -88,3 +143,4 @@ volumes:
   redis_data:
   frontend_node_modules:
   backend_gradle_cache:
+  backend_test_gradle_cache:

@@ -10,6 +10,11 @@ Docker Compose runs the following services together:
 - MySQL database
 - Redis session store
 
+## Documentation
+
+- [Docker Development Environment](./docs/docker-development.md)
+- [Nginx Load Balancing](./docs/nginx-load-balancing.md)
+
 ## Architecture
 
 ```text
@@ -247,6 +252,14 @@ View the latest Nginx logs:
 ```bash
 docker compose logs --no-color --tail=100 nginx
 ```
+
+## Nginx Load Balancing
+
+The development environment runs multiple Spring Boot backend instances behind Nginx.
+
+For load-balancing architecture, Redis shared-session verification, and backend failure testing, see:
+
+- [Nginx Load Balancing](./nginx-load-balancing.md)
 
 ## MySQL Connection
 

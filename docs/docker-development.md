@@ -261,6 +261,14 @@ For load-balancing architecture, Redis shared-session verification, and backend 
 
 - [Nginx Load Balancing](./nginx-load-balancing.md)
 
+## Blue-Green Deployment
+
+The backend can be switched manually between Blue and Green environments through Nginx.
+
+For traffic switching, shared-session verification, and rollback procedures, see:
+
+- [Manual Blue-Green Deployment](./blue-green-deployment.md)
+
 ## MySQL Connection
 
 The Spring Boot backend connects to MySQL through the Docker Compose service name:

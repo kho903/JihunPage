@@ -1,4 +1,10 @@
 .gradle
 build
 uploads
+
+.git
+.gitignore
+.idea
+*.iml
+
 .DS_Store

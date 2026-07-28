@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  shell-check:
+    name: Shell Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Validate Bash syntax
+        shell: bash
+        run: |
+          for script in scripts/*.sh; do
+            echo "Checking syntax: ${script}"
+            bash -n "${script}"
+          done
+
+      - name: Verify executable permissions
+        shell: bash
+        run: |
+          has_error=0
+
+          for script in scripts/*.sh; do
+            if [[ ! -x "${script}" ]]; then
+              echo "::error file=${script}::Script is not executable"
+              has_error=1
+            else
+              echo "Executable: ${script}"
+            fi
+          done
+
+          exit "${has_error}"

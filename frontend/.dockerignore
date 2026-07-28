@@ -1,4 +1,9 @@
 node_modules
 dist
+
+.git
+.gitignore
+.idea
+
 npm-debug.log
 .DS_Store

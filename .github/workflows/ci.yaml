@@ -74,3 +74,44 @@ jobs:
 
       - name: Build frontend
         run: npm run build
+  backend-test:
+    name: Backend Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      MYSQL_DATABASE: jihunpage
+      MYSQL_USER: jihun
+      MYSQL_PASSWORD: ci-test-password
+      MYSQL_ROOT_PASSWORD: ci-root-password
+      SPRING_DATASOURCE_PASSWORD: ci-test-password
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Show Docker versions
+        run: |
+          docker version
+          docker compose version
+
+      - name: Run backend tests
+        run: |
+          docker compose \
+            -p jihunpage-ci \
+            --profile test \
+            up \
+            --build \
+            --abort-on-container-exit \
+            --exit-code-from backend-test \
+            backend-test
+
+      - name: Clean up test environment
+        if: always()
+        run: |
+          docker compose \
+            -p jihunpage-ci \
+            --profile test \
+            down \
+            --volumes \
+            --remove-orphans

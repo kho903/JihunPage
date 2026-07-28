@@ -64,7 +64,7 @@ X-Backend-Instance: backend-blue
 X-Backend-Instance: backend-green
 ```
 
-## Upstrean Configuration
+## Upstream Configuration
 
 The available upstream configuration files are:
 
@@ -207,7 +207,7 @@ All responses should contain:
 X-Backend-Instance: backend-blue
 ```
 
-## Sharded-Session Verification
+## Sharded Session Verification
 
 Redis allows the authenticated HTTP session remain valid after switching environments
 
@@ -294,20 +294,26 @@ The same session should remain valid after rolling back to Blue
 9. Verify the existing login session
 10. Keep the previous environment available for rollback
 
-## Import Limitations
+## Deployment Automation
 
-This is a development-oriented manual Blue-Green structure
+The manual Blue-Green switching process can also be executed through Shell scripts.
 
-It does not yet include:
+For automated health checks, deployment, traffic switching, and rollback, see:
 
-- Production Docker images
-- Automatic health-check retries
-- Deployment scripts
-- Automatic rollback
-- Github Actions
+- [Blue-Green Deployment Automation](./blue-green-automation.md)
+
+## Current Limitations
+
+This Blue-Green deployment structure still does not include:
+
+- GitHub Actions
 - AWS deployment
+- HTTPS and domain configuration
 - Database migration management
-- Versione Docker images
+- Versioned Docker images
+- Deployment history
+- Git commit tracking for deployments
+- Production metric-based automatic rollback
 - Zero-downtime frontend deployment
 
 The current active file is also tracked in Git. A later deployment script will manage environment switching more safely.

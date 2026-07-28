@@ -205,6 +205,7 @@ docker compose down -v
 - [Docker Development Environment](docs/docker-development.md)
 - [Manual Blue-Green Deployment](./docs/blue-green-deployment.md)
 - [Production Docker Environment](./docs/production-docker.md)
+- [Blue-Green Deployment Automation](./docs/blue-green-automation.md)
 
 ## Development Workflow
 

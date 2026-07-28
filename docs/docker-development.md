@@ -269,6 +269,14 @@ For traffic switching, shared-session verification, and rollback procedures, see
 
 - [Manual Blue-Green Deployment](./blue-green-deployment.md)
 
+## Production Docker Environment
+
+Production-oriented backend and frontend images can be run locally without development servers or source-code mounts.
+
+For image builds, production Compose commands, and verification procedures, see:
+
+- [Production Docker Environment](./production-docker.md)
+
 ## MySQL Connection
 
 The Spring Boot backend connects to MySQL through the Docker Compose service name:

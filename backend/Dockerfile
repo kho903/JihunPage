@@ -21,6 +21,9 @@ FROM eclipse-temurin:21-jre-alpine AS runtime
 
 WORKDIR /app
 
+LABEL org.opencontainers.image.source="https://github.com/kho903/JihunPage" \
+      org.opencontainers.image.description="JihunPage Spring Boot backend"
+
 RUN addgroup -S spring \
     && adduser -S spring -G spring
 

@@ -14,6 +14,9 @@ RUN npm run build
 # 2. Serve static files
 FROM nginx:alpine AS runtime
 
+LABEL org.opencontainers.image.source="https://github.com/kho903/JihunPage" \
+      org.opencontainers.image.description="JihunPage React frontend"
+
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 COPY --from=builder \

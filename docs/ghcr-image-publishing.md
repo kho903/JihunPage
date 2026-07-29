@@ -46,6 +46,53 @@ The frontend image contains:
 - Nginx web server
 - SPA routing configuration
 
+## Supported Platforms
+
+Both production images support the following Linux platforms:
+
+```text
+linux/amd64
+linux/arm64
+```
+
+The published image tags point to multi-platform manifests.
+
+```text
+ghcr.io/kho903/jihunpage-backend:latest
+├── linux/amd64
+└── linux/arm64
+
+ghcr.io/kho903/jihunpage-frontend:latest
+├── linux/amd64
+└── linux/arm64
+```
+
+Docker automatically selects the appropriate image for the host architecture.
+
+```text
+Intel and AMD x86-64 systems
+→ linux/amd64
+
+Apple Silicon and ARM64 systems
+→ linux/arm64
+```
+
+The GitHub Actions workflow uses QEMU and Docker Buildx to build both platforms.
+
+```yaml
+- name: Set up QEMU
+  uses: docker/setup-qemu-action@v4
+
+- name: Set up Docker Buildx
+  uses: docker/setup-buildx-action@v4
+```
+
+Each image build specifies both target platforms:
+
+```yaml
+platforms: linux/amd64,linux/arm64
+```
+
 ## Publishing Flow
 
 ```text
@@ -244,6 +291,31 @@ cache-to: type=gha,mode=max,scope=frontend
 
 Separate scopes prevent backend and frontend build caches from being mixed.
 
+## Inspect Multi-Platform Manifests
+
+Inspect the backend image manifest:
+
+```bash
+docker buildx imagetools inspect \
+  ghcr.io/kho903/jihunpage-backend:latest
+```
+
+Inspect the frontend image manifest:
+
+```bash
+docker buildx imagetools inspect \
+  ghcr.io/kho903/jihunpage-frontend:latest
+```
+
+The output should include both platforms:
+
+```text
+Platform: linux/amd64
+Platform: linux/arm64
+```
+
+Additional `unknown/unknown` entries may represent image provenance or attestation metadata rather than executable container platforms.
+
 ## Pull Images
 
 ### Backend Latest Image
@@ -256,6 +328,23 @@ docker pull ghcr.io/kho903/jihunpage-backend:latest
 
 ```bash
 docker pull ghcr.io/kho903/jihunpage-frontend:latest
+```
+
+### Apple Silicon Verification
+
+On an Apple Silicon Mac, Docker should automatically pull the ARM64 image without requiring an explicit `--platform` option.
+
+```bash
+docker pull ghcr.io/kho903/jihunpage-backend:latest
+docker pull ghcr.io/kho903/jihunpage-frontend:latest
+```
+
+The following workaround should no longer be necessary:
+
+```bash
+docker pull \
+  --platform linux/amd64 \
+  ghcr.io/kho903/jihunpage-backend:latest
 ```
 
 ### Specific Commit Image
@@ -367,6 +456,38 @@ docker pull ghcr.io/kho903/jihunpage-backend:latest
 docker pull ghcr.io/kho903/jihunpage-frontend:latest
 ```
 
+Verify the published manifests:
+
+```bash
+docker buildx imagetools inspect \
+  ghcr.io/kho903/jihunpage-backend:latest
+```
+
+```bash
+docker buildx imagetools inspect \
+  ghcr.io/kho903/jihunpage-frontend:latest
+```
+
+Confirm that both outputs include:
+
+```text
+linux/amd64
+linux/arm64
+```
+
+On an Apple Silicon Mac, verify native image selection:
+
+```bash
+docker pull ghcr.io/kho903/jihunpage-backend:latest
+docker pull ghcr.io/kho903/jihunpage-frontend:latest
+```
+
+The commands should succeed without:
+
+```text
+--platform linux/amd64
+```
+
 ## Current Limitations
 
 The current publishing workflow does not include:
@@ -374,8 +495,6 @@ The current publishing workflow does not include:
 - Automatic AWS deployment
 - Automatic Blue-Green traffic switching
 - Semantic version tags
-- Multi-platform image builds
-- ARM64 image publishing
 - Image vulnerability scan enforcement
 - Container image signing
 - Automatic GitHub Release creation

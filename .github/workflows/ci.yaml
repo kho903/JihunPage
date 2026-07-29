@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  shell-check:
+    name: Shell Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Validate Bash syntax
+        shell: bash
+        run: |
+          for script in scripts/*.sh; do
+            echo "Checking syntax: ${script}"
+            bash -n "${script}"
+          done
+
+      - name: Verify executable permissions
+        shell: bash
+        run: |
+          has_error=0
+
+          for script in scripts/*.sh; do
+            if [[ ! -x "${script}" ]]; then
+              echo "::error file=${script}::Script is not executable"
+              has_error=1
+            else
+              echo "Executable: ${script}"
+            fi
+          done
+
+          exit "${has_error}"
+
+  frontend-check:
+    name: Frontend Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Build frontend
+        run: npm run build
+  backend-test:
+    name: Backend Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      MYSQL_DATABASE: jihunpage
+      MYSQL_USER: jihun
+      MYSQL_PASSWORD: ci-test-password
+      MYSQL_ROOT_PASSWORD: ci-root-password
+      SPRING_DATASOURCE_PASSWORD: ci-test-password
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Show Docker versions
+        run: |
+          docker version
+          docker compose version
+
+      - name: Run backend tests
+        run: |
+          docker compose \
+            -p jihunpage-ci \
+            --profile test \
+            up \
+            --build \
+            --abort-on-container-exit \
+            --exit-code-from backend-test \
+            backend-test
+
+      - name: Clean up test environment
+        if: always()
+        run: |
+          docker compose \
+            -p jihunpage-ci \
+            --profile test \
+            down \
+            --volumes \
+            --remove-orphans

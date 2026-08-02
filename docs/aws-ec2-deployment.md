@@ -256,6 +256,44 @@ After the service was activated, Docker and Docker Compose commands operated nor
 
 ## 7. Swap Configuration
 
+The `t4g.small` instance has approximately 2 GiB of memory. Because the production environment runs MySQL, Redis, Nginx, the frontend, and one or two Spring Boot backend containers, a 2 GiB swap file was added to reduce the risk of processes being terminated when physical memory becomes temporarily insufficient.
+
+A 2 GiB swap file was created with the following commands:
+
+```bash
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+```
+
+The file permission was restricted to `600` because the swap file may contain data that was previously stored in application memory.
+
+The swap configuration was verified with the following commands:
+
+```bash
+free -h
+swapon --show
+```
+
+To enable the swap file automatically after an EC2 restart, the following entry was added to `/etc/fstab`:
+
+```bash
+echo '/swapfile swap swap defaults 0 0' | sudo tee -a /etc/fstab
+```
+
+The configured swap file can be confirmed with:
+
+```bash
+grep swapfile /etc/fstab
+```
+
+After configuration, the server had approximately 2 GiB of physical memory and 2 GiB of swap space.
+
+Swap was added as a safety measure rather than as a replacement for physical memory. During normal operation, only a small amount of swap space was used, and continuous swap-in or swap-out activity was not observed.
+
+The inactive backend is normally stopped to reduce memory usage. Both Blue and Green backends are run simultaneously only while a new version is being deployed and verified.
+
 ## 8. Repository and Environment Setup
 
 ## 9. GHCR Image Deployment

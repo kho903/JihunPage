@@ -146,7 +146,113 @@ When the administrator's network location changes, the public IP address permitt
 
 ## 5. EC2 Initial Setup
 
+The EC2 instance was accessed through SSH using the private key created when the instance was launched.
+
+```bash
+chmod 400 <private-key>.pem
+
+ssh -i <private-key>.pem ec2-user@<ec2-public-ip>
+```
+
+The private key file permissions were restricted before connecting to prevent SSH from rejecting an overly accessible key file.
+
+After connecting to the instance, the installed packages were updated and Git was installed.
+
+```bash
+sudo dnf update -y
+sudo dnf install -y git
+```
+
+The operating system, CPU architecture, memory, and storage were checked before installing the application dependencies.
+
+```bash
+cat /etc/os-release
+uname -m
+free -h
+df -h
+```
+
+The expected CPU architecture was `aarch64`, because the EC2 instance uses an ARM64-based AWS Graviton processor.
+
+The initial server setup included the following components:
+
+- Git
+- Docker Engine
+- Docker Compose
+- 2 GiB swap space
+- JihunPage repository
+- Production environment variables
+- Persistent directories for MySQL and uploaded images
+
+Application source code was not built directly on the EC2 instance. The server only pulls the repository configuration and prebuilt container images from GHCR.
+
 ## 6. Docker and Docker Compose Installation
+
+Docker was installed using the Amazon Linux 2023 package manager.
+
+```bash
+sudo dnf install -y docker
+```
+
+The Docker service was enabled so that it starts automatically when the EC2 instance boots. It was also started immediately.
+
+```bash
+sudo systemctl enable --now docker
+```
+
+The service status was checked after installation.
+
+```bash
+sudo systemctl status docker
+```
+
+The `ec2-user` account was added to the `docker` group so that Docker commands could be executed without `sudo`.
+
+```bash
+sudo usermod -aG docker ec2-user
+```
+
+The SSH session was disconnected and reconnected to apply the new group membership.
+
+```bash
+exit
+
+ssh -i <private-key>.pem ec2-user@<ec2-public-ip>
+```
+
+Docker installation, Docker Compose, and the CPU architecture were verified with the following commands:
+
+```bash
+docker --version
+docker compose version
+uname -m
+```
+
+The EC2 instance returned the following results:
+
+```text
+Docker version 25.0.14, build 0bab007
+Docker Compose version v5.1.4
+aarch64
+```
+
+These results confirm that Docker and Docker Compose were installed correctly and that the application is running on an ARM64 environment.
+
+The project therefore uses the following command format:
+
+```bash
+docker compose -f compose.deploy.yaml up -d
+```
+
+The legacy `docker-compose` command is not used.
+
+During the initial setup, Docker commands failed because the Docker service had been installed but was not running. The issue was resolved by enabling and starting the service.
+
+```bash
+sudo systemctl enable --now docker
+```
+
+After the service was activated, Docker and Docker Compose commands operated normally.
 
 ## 7. Swap Configuration
 

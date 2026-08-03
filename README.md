@@ -206,6 +206,7 @@ docker compose down -v
 - [Manual Blue-Green Deployment](./docs/blue-green-deployment.md)
 - [Production Docker Environment](./docs/production-docker.md)
 - [Blue-Green Deployment Automation](./docs/blue-green-automation.md)
+- [AWS EC2 Deployment Guide](docs/aws-ec2-deployment.md)
 
 ## Development Workflow
 

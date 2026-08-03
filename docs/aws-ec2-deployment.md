@@ -490,6 +490,74 @@ The token must not be written directly into the repository, shell scripts, or pu
 
 ## 10. Upload Directory Permissions
 
+The backend stores uploaded gallery images in a directory bind-mounted from the EC2 host. The upload directory was created before starting the backend containers.
+
+```bash
+mkdir -p backend/uploads
+```
+
+The production backend image runs as a non-root `spring` user for security. However, the upload directory created on the EC2 instance was initially owned by `root`.
+
+The directory ownership was checked with:
+
+```bash
+ls -ld backend/uploads
+```
+
+Because the backend process did not have permission to write to the bind-mounted directory, the application failed while initializing the gallery upload directory.
+
+The backend image user configuration was inspected to identify the user running inside the container.
+
+```bash
+docker image inspect \
+    ghcr.io/kho903/jihunpage-backend:<image-tag> \
+    --format '{{.Config.User}}'
+```
+
+The user and group IDs inside the container can also be checked by running:
+
+```bash
+docker run --rm \
+    --entrypoint id \
+    ghcr.io/kho903/jihunpage-backend:<image-tag>
+```
+
+After confirming the UID and GID of the `spring` user, the ownership of the host upload directory was changed to match them.
+
+```bash
+sudo chown -R <spring-uid>:<spring-gid> backend/uploads
+```
+
+The directory ownership was then verified again.
+
+```bash
+ls -ld backend/uploads
+```
+
+After the ownership was corrected, the backend container was recreated.
+
+```bash
+docker compose \
+    --env-file .env.deploy \
+    -f compose.deploy.yaml \
+    up -d --force-recreate backend-blue
+```
+
+The backend logs were checked to confirm that the upload directory was initialized successfully.
+
+```bash
+docker compose \
+    --env-file .env.deploy \
+    -f compose.deploy.yaml \
+    logs --tail=100 backend-blue
+```
+
+Image upload and deletion were then tested through the deployed application.
+
+This issue occurred because bind-mounted directories retain the ownership and permissions of the EC2 host. Running the backend as a non-root user improves container security, but the host directory must grant that user the required write permissions.
+
+The directory should not be made globally writable with permissions such as `777`. Matching the directory ownership to the container user provides the required access without granting unnecessary permissions.
+
 ## 11. Blue-Green Deployment Verification
 
 ## 12. Resource Usage

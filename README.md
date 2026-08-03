@@ -46,75 +46,62 @@ The application is containerized with Docker, served through Nginx, tested with 
 
 ## Architecture
 
-## Project Structure
+### Project Structure
 
 ```text
 JihunPage/
-├── compose.yaml
-├── .env.example
-├── backend/
-│   ├── gradle/
-│   │   └── wrapper/
-│   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/
-│   │   │   └── resources/
-│   │   │       └── application.yaml
-│   │   └── test/
-│   ├── uploads/
-│   ├── Dockerfile.dev
-│   ├── build.gradle
-│   ├── gradlew
-│   ├── gradlew.bat
-│   └── settings.gradle
-├── nginx/
-│   └── default.dev.conf
 ├── frontend/
-│   ├── public/
-│   ├── src/
-│   │   ├── api/
-│   │   ├── components/
-│   │   ├── context/
-│   │   ├── hooks/
-│   │   ├── pages/
-│   │   ├── App.jsx
-│   │   ├── index.css
-│   │   └── main.jsx
-│   ├── .dockerignore
-│   ├── Dockerfile.dev
-│   ├── package.json
-│   └── vite.config.js
+├── backend/
+├── nginx/
+├── scripts/
 ├── docs/
-│   └── docker-development.md
+├── .github/workflows/
+├── compose.yaml
+├── compose.prod.yaml
+├── compose.deploy.yaml
 └── README.md
 ```
 
-The project structure above shows the main directories and files only.
+- `frontend`: React application and production frontend image
+- `backend`: Spring Boot application and gallery image storage directory
+- `nginx`: Reverse proxy and Blue-Green upstream configuration
+- `scripts`: Deployment, health check, traffic switching, and rollback scripts
+- `docs`: Detailed project and deployment documentation
+- `.github/workflows`: CI and GHCR image publishing workflows
+- `compose.yaml`: Local development environment
+- `compose.prod.yaml`: Production-style container environment
+- `compose.deploy.yaml`: GHCR image-based EC2 deployment environment
 
-## Development Architecture
+### Production Request Flow
 
-```text
-Browser
-   │
-   │ http://localhost
-   ▼
-Nginx :80
-   ├── /          → Frontend :5173
-   ├── /api       → Backend :8080
-   └── /uploads   → Backend :8080
+```mermaid
+flowchart TD
+    Browser[Web Browser]
 
-Backend
-   ├── MySQL :3306
-   └── Redis :6379
+    Browser -->|HTTP :80| Gateway[External Nginx]
+
+    Gateway -->|/| Frontend[Frontend Nginx<br/>React Static Files]
+    Gateway -->|/api| ActiveBackend[Active Spring Boot Backend]
+    Gateway -->|/uploads| ActiveBackend
+
+    ActiveBackend --> Blue[Backend Blue<br/>Host 8081]
+    ActiveBackend --> Green[Backend Green<br/>Host 8082]
+
+    Blue --> MySQL[(MySQL)]
+    Green --> MySQL
+
+    Blue --> Redis[(Redis Session Store)]
+    Green --> Redis
+
+    Blue --> Uploads[(Shared Upload Directory)]
+    Green --> Uploads
 ```
 
-Nginx is the single entry point for the Docker development environment.
+Nginx acts as the single entry point for all external requests.
 
-- `/` requests are proxied to the Vite development server.
-- `/api` requests are proxied to the Spring Boot backend.
-- `/uploads` requests are proxied to the Spring Boot backend.
-- MySQL stores persistent application data.
-- Redis stores HTTP session data.
+The frontend is served as static files from a dedicated Nginx container. API and uploaded image requests are forwarded to the currently active Spring Boot backend.
+
+Blue and Green backends share the same MySQL database, Redis session store, and upload directory. This allows application data, uploaded images, and login sessions to remain available when traffic is switched between backend environments.
 
 ## Technology Stack
 

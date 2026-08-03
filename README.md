@@ -642,11 +642,16 @@ Production images are published only after the CI workflow succeeds on the `main
 
 ## Documentation
 
-- [Docker Development Environment](docs/docker-development.md)
-- [Manual Blue-Green Deployment](./docs/blue-green-deployment.md)
-- [Production Docker Environment](./docs/production-docker.md)
-- [Blue-Green Deployment Automation](./docs/blue-green-automation.md)
-- [AWS EC2 Deployment Guide](docs/aws-ec2-deployment.md)
+Detailed technical documentation is available in the `docs` directory.
+
+| Document                                                   | Description                                                                                            |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| [AWS EC2 Deployment Guide](docs/aws-ec2-deployment.md)     | EC2 initial setup, GHCR image deployment, Blue-Green verification, resource usage, and troubleshooting |
+| [GHCR Runtime Deployment](docs/ghcr-runtime-deployment.md) | Runtime deployment using prebuilt GHCR images instead of building applications directly on the server  |
+
+The AWS deployment guide contains the complete production setup, including security group rules, Docker installation, swap configuration, upload directory permissions, operation commands, and current limitations.
+
+The GHCR runtime deployment document explains how versioned frontend and backend images are pulled and executed through `compose.deploy.yaml`.
 
 ## Limitations and Future Improvements
 

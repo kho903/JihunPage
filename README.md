@@ -2,9 +2,13 @@
 
 ## Overview
 
-A personal introduction website built with React and Spring Boot.
+JihunPage is a full-stack member-based gallery service built with React and Spring Boot.
 
-JihunPage includes a personal profile page, session-based authentication, and a public gallery for each member.
+The project began as a React personal introduction page and was gradually expanded to include member registration, session-based authentication, member-specific public galleries, and image upload and deletion features.
+
+MySQL is used for persistent application data, while Redis stores shared HTTP sessions so that login states remain valid when traffic is switched between Blue and Green backend instances.
+
+The application is containerized with Docker, served through Nginx, tested with GitHub Actions, distributed through GHCR as AMD64 and ARM64 images, and deployed to an ARM64-based AWS EC2 instance.
 
 ## Key Features
 

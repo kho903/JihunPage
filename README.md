@@ -470,6 +470,105 @@ In the development environment:
 
 ## Production Deployment
 
+The production environment runs prebuilt frontend and backend images from GitHub Container Registry.
+
+The EC2 server does not build the React or Spring Boot applications directly. It pulls versioned images and starts the required containers using `compose.deploy.yaml`.
+
+### Prerequisites
+
+- Docker
+- Docker Compose
+- Git
+- GHCR access when the container images are private
+- A configured `.env.deploy` file
+
+Clone the repository and move to the project directory:
+
+```bash
+git clone https://github.com/kho903/JihunPage.git
+cd JihunPage
+```
+
+Create the production environment file:
+
+```bash
+touch .env.deploy
+chmod 600 .env.deploy
+```
+
+The configured image tag should identify the exact version being deployed.
+
+```dotenv
+IMAGE_TAG=sha-<full-commit-sha>
+```
+
+Review the resolved deployment configuration before starting the containers:
+
+```bash
+docker compose \
+    --env-file .env.deploy \
+    -f compose.deploy.yaml \
+    config
+```
+
+Pull the configured images from GHCR:
+
+```bash
+docker compose \
+    --env-file .env.deploy \
+    -f compose.deploy.yaml \
+    pull
+```
+
+Start the production environment:
+
+```bash
+docker compose \
+    --env-file .env.deploy \
+    -f compose.deploy.yaml \
+    up -d
+```
+
+Check the container status:
+
+```bash
+docker compose \
+    --env-file .env.deploy \
+    -f compose.deploy.yaml \
+    ps
+```
+
+### Deploying a New Backend Version
+
+After updating the image tag in `.env.deploy`, run the automated Blue-Green deployment script:
+
+```bash
+./scripts/deploy.sh
+```
+
+The script performs the following operations:
+
+1. Detects the active and inactive backend environments
+2. Recreates only the inactive backend with the new image
+3. Performs an HTTP health check
+4. Verifies the backend instance response header
+5. Switches Nginx traffic to the verified backend
+6. Restores the previous configuration if the switch fails
+
+Confirm the active backend after deployment:
+
+```bash
+./scripts/detect-environment.sh active
+```
+
+If the new backend fails after traffic switching, roll back to the previous environment:
+
+```bash
+./scripts/rollback.sh
+```
+
+Detailed EC2 setup, security configuration, troubleshooting, and operation commands are available in the [AWS EC2 Deployment Guide](docs/aws-ec2-deployment.md).
+
 ## Testing
 
 ## Documentation

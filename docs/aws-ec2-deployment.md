@@ -666,6 +666,56 @@ Both backends are run simultaneously only during deployment verification and tra
 
 ## 12. Resource Usage
 
+The production environment runs on a `t4g.small` EC2 instance with approximately 2 GiB of physical memory and 2 GiB of swap space.
+
+Resource usage was measured in two operating states:
+
+- Only the active backend running
+- Both Blue and Green backends running during deployment verification
+
+The following commands were used to inspect the server resources:
+
+```bash
+free -h
+docker stats --no-stream
+vmstat 1 5
+```
+
+When only one backend was running, approximately `596 MiB` of memory remained available.
+
+```text
+Available memory: approximately 596 MiB
+Swap usage: approximately 4 MiB
+```
+
+When both Blue and Green backends were running, approximately `398 MiB` of memory remained available.
+
+```text
+Available memory: approximately 398 MiB
+Swap usage: approximately 7 MiB
+```
+
+The approximate memory usage of each container was:
+
+| Container     |            Memory Usage |
+| ------------- | ----------------------: |
+| MySQL         | Approximately `474 MiB` |
+| Backend Blue  | Approximately `272 MiB` |
+| Backend Green | Approximately `243 MiB` |
+| Redis         |  Approximately `10 MiB` |
+| Frontend      |   Approximately `6 MiB` |
+| Nginx         |   Approximately `4 MiB` |
+
+MySQL used the largest amount of memory among the containers. Each Spring Boot backend also required approximately `240–270 MiB`.
+
+CPU usage remained low during normal operation, and the CPU idle percentage was generally between `94%` and `100%`.
+
+The `vmstat` results did not show continuous swap-in or swap-out activity. This indicated that the swap file was available as a safety measure but was not being heavily used during normal operation.
+
+Because running both backend containers increases memory usage, the inactive backend is stopped after deployment verification.
+
+This operating strategy allows the application to use Blue-Green deployment on a small EC2 instance while reducing unnecessary memory consumption during normal operation.
+
 ## 13. Troubleshooting
 
 ## 14. Operation Commands

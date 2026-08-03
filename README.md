@@ -393,63 +393,80 @@ Detailed setup steps, troubleshooting cases, operation commands, and resource me
 
 ## Local Development
 
-Create a local `.env` file based on `.env.example`.
+The local development environment runs the frontend, backend, MySQL, Redis, and Nginx with Docker Compose.
+
+### Prerequisites
+
+- Git
+- Docker
+- Docker Compose
+
+Clone the repository:
 
 ```bash
-cp .env.example .env
+git clone https://github.com/kho903/JihunPage.git
+cd JihunPage
 ```
 
-Update the MySQL credentials in `.env`.
+Create the local environment file if required by `compose.yaml`.
 
-```dotenv
-MYSQL_DATABASE=jihunpage
-MYSQL_USER=your_mysql_user
-MYSQL_PASSWORD=your_mysql_password
-MYSQL_ROOT_PASSWORD=your_mysql_root_password
+```bash
+touch .env
 ```
 
-Start the application from the project root:
+The environment variable names must match the values referenced in `compose.yaml`. Actual passwords and secrets must not be committed to Git.
+
+Start the development environment:
 
 ```bash
 docker compose up --build
 ```
 
-To run the containers in the background:
+Start the containers in detached mode:
 
 ```bash
 docker compose up -d --build
 ```
 
-After the containers start, open the application through Nginx:
+Check the container status:
 
-```text
-http://localhost
+```bash
+docker compose ps
 ```
 
-The following service addresses are available in the development environment:
+Display container logs:
 
-| Service     | URL                         | Purpose                              |
-| ----------- | --------------------------- | ------------------------------------ |
-| Application | http://localhost            | Main application entry point         |
-| Frontend    | http://localhost:5173       | Direct frontend access for debugging |
-| Backend     | http://localhost:8080       | Direct backend access for debugging  |
-| Health API  | http://localhost/api/health | Health check through Nginx           |
-| MySQL       | localhost:3306              | Application database                 |
-| Redis       | localhost:6379              | HTTP session storage                 |
+```bash
+docker compose logs --tail=100
+```
 
-Stop the application:
+Follow the backend logs in real time:
+
+```bash
+docker compose logs -f backend
+```
+
+Stop and remove the containers:
 
 ```bash
 docker compose down
 ```
 
-MySQL data and Redis session data remain in Docker named volumes after running `docker compose down`.
-
-The following command also deletes the MySQL and Redis named volumes:
+Remove the containers and development volumes:
 
 ```bash
 docker compose down -v
 ```
+
+The `-v` option removes persistent Docker volumes, including local database data. It should be used only when the development data can be deleted.
+
+In the development environment:
+
+- The frontend runs through the Vite development server.
+- The backend runs through Gradle `bootRun`.
+- MySQL stores application data.
+- Redis stores shared HTTP sessions.
+- Nginx provides a single entry point for frontend and API requests.
 
 ## Production Deployment
 

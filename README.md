@@ -107,40 +107,53 @@ Blue and Green backends share the same MySQL database, Redis session store, and 
 
 ### Frontend
 
-- React 19
-- JavaScript
-- Vite
-- Bootstrap 5
-- ESLint
+| Technology    | Version / Purpose                       |
+| ------------- | --------------------------------------- |
+| React         | `19`                                    |
+| JavaScript    | Frontend application logic              |
+| Vite          | Development server and production build |
+| Bootstrap     | `5`, responsive UI                      |
+| React Router  | Client-side routing                     |
+| React Context | Authentication state management         |
+| ESLint        | Static code analysis                    |
+| Nginx         | Production static file serving          |
 
 ### Backend
 
-- Java 21
-- Spring Boot 3.5.16
-- Spring Web
-- Spring Data JPA
-- Bean Validation
-- Spring Security Crypto
-- Spring Session
-- MySQL Connector/J
-- Gradle
+| Technology                | Version / Purpose               |
+| ------------------------- | ------------------------------- |
+| Java                      | `21`                            |
+| Spring Boot               | `3.5.16`                        |
+| Spring Web                | REST API development            |
+| Spring Data JPA           | Database access and persistence |
+| Spring Validation         | Request validation              |
+| Spring Session Data Redis | Shared HTTP session storage     |
+| BCrypt                    | Password hashing                |
+| Gradle                    | `8.14.3`, build automation      |
 
-### Database
+### Data and Storage
 
-- MySQL 8.4 LTS
-- Docker named volume for data persistence
+| Technology        | Version / Purpose                     |
+| ----------------- | ------------------------------------- |
+| MySQL             | `8.4.10`, persistent application data |
+| Redis             | `7.4.9`, shared session storage       |
+| Local File System | Uploaded gallery image storage        |
+| Docker Volume     | Database data persistence             |
+| Bind Mount        | Uploaded image persistence            |
 
-### Session Storage
+### Infrastructure and Deployment
 
-- Redis 7.4
-- Spring Session Data Redis
-- Redis-backed HTTP session persistence
-
-### Development Environment
-
-- Docker
-- Docker Compose
-- Nginx
+| Technology                | Purpose                                 |
+| ------------------------- | --------------------------------------- |
+| Docker                    | Containerized execution environment     |
+| Docker Compose            | Multi-container orchestration           |
+| Nginx                     | Reverse proxy and traffic switching     |
+| GitHub Actions            | CI and image publishing automation      |
+| GitHub Container Registry | Frontend and backend image distribution |
+| Docker Buildx             | Multi-architecture image builds         |
+| QEMU                      | ARM64 and AMD64 cross-platform builds   |
+| AWS EC2                   | Production server                       |
+| Amazon Linux 2023         | EC2 operating system                    |
 
 ## Authentication and Session Management
 

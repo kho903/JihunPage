@@ -892,4 +892,253 @@ To reduce memory consumption, only the active backend remains running during nor
 
 ## 14. Operation Commands
 
+This section summarizes the commands commonly used to operate and inspect the JihunPage production environment.
+
+All commands should be executed from the JihunPage project root unless otherwise specified.
+
+### 14.1 Update Deployment Configuration
+
+Update the local `main` branch before applying configuration changes:
+
+```bash
+git switch main
+git pull origin main
+```
+
+Review the resolved Docker Compose configuration:
+
+```bash
+docker compose \
+    --env-file .env.deploy \
+    -f compose.deploy.yaml \
+    config
+```
+
+Because this output may contain sensitive environment values, it should not be copied into public logs.
+
+### 14.2 Pull Deployment Images
+
+Pull the frontend and backend images configured in `.env.deploy`:
+
+```bash
+docker compose \
+    --env-file .env.deploy \
+    -f compose.deploy.yaml \
+    pull
+```
+
+List the downloaded Docker images:
+
+```bash
+docker image ls
+```
+
+### 14.3 Check Container Status
+
+Check the status of all production containers:
+
+```bash
+docker compose \
+    --env-file .env.deploy \
+    -f compose.deploy.yaml \
+    ps
+```
+
+Check running Docker containers:
+
+```bash
+docker ps
+```
+
+### 14.4 Inspect Container Logs
+
+Display recent logs from all services:
+
+```bash
+docker compose \
+    --env-file .env.deploy \
+    -f compose.deploy.yaml \
+    logs --tail=100
+```
+
+Display logs from a specific backend:
+
+```bash
+docker compose \
+    --env-file .env.deploy \
+    -f compose.deploy.yaml \
+    logs --tail=100 backend-blue
+```
+
+Follow backend logs in real time:
+
+```bash
+docker compose \
+    --env-file .env.deploy \
+    -f compose.deploy.yaml \
+    logs -f backend-blue
+```
+
+### 14.5 Check Blue-Green Environments
+
+Check the currently active backend:
+
+```bash
+./scripts/detect-environment.sh active
+```
+
+Check the inactive backend:
+
+```bash
+./scripts/detect-environment.sh inactive
+```
+
+Check both backend environments:
+
+```bash
+./scripts/detect-environment.sh all
+```
+
+Run a health check for Blue:
+
+```bash
+./scripts/health-check.sh blue
+```
+
+Run a health check for Green:
+
+```bash
+./scripts/health-check.sh green
+```
+
+### 14.6 Deploy a New Backend Version
+
+Run the automated Blue-Green deployment script:
+
+```bash
+./scripts/deploy.sh
+```
+
+The deployment script recreates the inactive backend using the configured image, performs a health check, and switches Nginx traffic after verification succeeds.
+
+After deployment, confirm the active environment:
+
+```bash
+./scripts/detect-environment.sh active
+```
+
+The externally returned backend instance can also be checked with:
+
+```bash
+curl -I http://localhost/api/health
+```
+
+Expected response header:
+
+```text
+X-Backend-Instance: backend-blue
+```
+
+or:
+
+```text
+X-Backend-Instance: backend-green
+```
+
+### 14.7 Switch Traffic Manually
+
+Switch traffic to Blue:
+
+```bash
+./scripts/switch-backend.sh blue
+```
+
+Switch traffic to Green:
+
+```bash
+./scripts/switch-backend.sh green
+```
+
+Traffic should only be switched after the target backend passes its health check.
+
+### 14.8 Roll Back a Deployment
+
+Return traffic to the previously inactive backend:
+
+```bash
+./scripts/rollback.sh
+```
+
+After rollback, verify the active backend and external response header:
+
+```bash
+./scripts/detect-environment.sh active
+curl -I http://localhost/api/health
+```
+
+### 14.9 Stop the Inactive Backend
+
+To reduce memory usage, the inactive backend can be stopped after deployment verification.
+
+Example for Blue:
+
+```bash
+docker compose \
+    --env-file .env.deploy \
+    -f compose.deploy.yaml \
+    stop backend-blue
+```
+
+Example for Green:
+
+```bash
+docker compose \
+    --env-file .env.deploy \
+    -f compose.deploy.yaml \
+    stop backend-green
+```
+
+The active backend must be confirmed before stopping either container.
+
+### 14.10 Check Server Resources
+
+Check physical memory and swap usage:
+
+```bash
+free -h
+```
+
+Check container resource usage:
+
+```bash
+docker stats --no-stream
+```
+
+Check CPU, memory, and swap activity:
+
+```bash
+vmstat 1 5
+```
+
+Check disk usage:
+
+```bash
+df -h
+```
+
+### 14.11 Restart the Production Environment
+
+Restart the currently running containers:
+
+```bash
+docker compose \
+    --env-file .env.deploy \
+    -f compose.deploy.yaml \
+    restart
+```
+
+A full recreation should be performed carefully because it may start both backend environments or temporarily affect the active service.
+
+Before executing operational commands, the current active backend, container status, and `.env.deploy` image tag should be checked.
+
 ## 15. Limitations

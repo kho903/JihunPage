@@ -338,6 +338,57 @@ The same container images can therefore run on Intel or AMD servers, Apple Silic
 
 ## AWS Deployment
 
+JihunPage is deployed to an ARM64-based AWS EC2 instance in the Seoul Region.
+
+### Production Environment
+
+| Resource         | Configuration        |
+| ---------------- | -------------------- |
+| AWS Region       | Asia Pacific (Seoul) |
+| EC2 Instance     | `t4g.small`          |
+| CPU Architecture | ARM64                |
+| Operating System | Amazon Linux 2023    |
+| Memory           | Approximately 2 GiB  |
+| Swap             | 2 GiB                |
+| Storage          | Amazon EBS `gp3`     |
+| Public Access    | HTTP port `80`       |
+
+The production server pulls prebuilt frontend and backend images from GHCR using `compose.deploy.yaml`.
+
+Gradle and npm builds are not executed directly on the EC2 instance. The server is responsible only for pulling versioned container images and running the production containers.
+
+### Network Configuration
+
+The EC2 security group exposes only the ports required for administration and public access.
+
+- SSH port `22`: restricted to the administrator's current public IP
+- HTTP port `80`: publicly accessible
+- MySQL port `3306`: not exposed externally
+- Redis port `6379`: not exposed externally
+- Backend ports `8081` and `8082`: not exposed externally
+
+All external application requests enter through Nginx on port `80`.
+
+### Verified Production Behavior
+
+The following features were verified through the EC2 public IP:
+
+- Member registration
+- Login and logout
+- Login session restoration after page refresh
+- Member-specific gallery access
+- Image upload and deletion
+- Blue-to-Green traffic switching
+- Redis session preservation after backend switching
+- MySQL data persistence
+- Uploaded image persistence
+
+During normal operation, only the active backend remains running to reduce memory usage. The inactive backend is started temporarily during deployment verification and traffic switching.
+
+Detailed setup steps, troubleshooting cases, operation commands, and resource measurements are documented in the following guide:
+
+- [AWS EC2 Deployment Guide](docs/aws-ec2-deployment.md)
+
 ## Screenshots
 
 ## Local Development

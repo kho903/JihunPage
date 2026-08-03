@@ -12,30 +12,37 @@ The application is containerized with Docker, served through Nginx, tested with 
 
 ## Key Features
 
-### Home
+### Member Authentication
 
-- Personal introduction
-- Experience
-- Skills
-- Projects
-- Contact information
-- Component-based page structure
-
-### Authentication
-
-- Member signup
-- Session-based login and logout
-- Redis-backed shared HTTP session storage
+- Member registration with server-side validation
 - BCrypt password hashing
-- Current member state management with React Context
+- Session-based login and logout
+- Authentication state restoration after page refresh
+- React Context-based authentication state management
 
-### Gallery
+### Member Gallery
 
-- Public gallery for each member
-- Image upload and deletion
-- Image detail modal
-- Owner-only upload and delete actions
-- Uploaded image file storage
+- Public gallery page for each member
+- Gallery URL based on the member ID
+- Image upload to the authenticated member's own gallery
+- Image deletion restricted to the photo owner
+- Image detail view using a modal
+- Persistent image storage through a Docker bind mount
+
+### Shared Session Management
+
+- HTTP sessions stored in Redis through Spring Session
+- Shared login state between Blue and Green backend instances
+- Session preservation during backend traffic switching
+
+### Deployment and Operations
+
+- Dockerized frontend, backend, MySQL, Redis, and Nginx
+- Nginx as the single entry point for frontend, API, and uploaded images
+- Automated frontend checks and backend tests with GitHub Actions
+- Multi-architecture image publishing to GHCR
+- Blue-Green deployment and rollback scripts
+- Production deployment and verification on AWS EC2
 
 ## Architecture
 

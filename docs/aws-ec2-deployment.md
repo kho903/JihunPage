@@ -560,6 +560,110 @@ The directory should not be made globally writable with permissions such as `777
 
 ## 11. Blue-Green Deployment Verification
 
+The production environment defines two Spring Boot backend containers for Blue-Green deployment.
+
+- `backend-blue`: EC2 host port `8081`
+- `backend-green`: EC2 host port `8082`
+
+Only one backend receives external traffic through Nginx at a time. The inactive backend is used to start and verify a new application version before traffic is switched.
+
+The currently active backend was checked with:
+
+```bash
+./scripts/detect-environment.sh active
+```
+
+The inactive backend can also be checked with:
+
+```bash
+./scripts/detect-environment.sh inactive
+```
+
+Before switching traffic, the target backend was started with the new GHCR image.
+
+```bash
+docker compose \
+    --env-file .env.deploy \
+    -f compose.deploy.yaml \
+    up -d --force-recreate backend-green
+```
+
+The target backend was verified directly through its EC2 host port.
+
+```bash
+curl -i http://localhost:8082/api/health
+```
+
+The health-check script verified both the HTTP response and the expected backend instance header.
+
+```bash
+./scripts/health-check.sh green
+```
+
+The expected response header was:
+
+```text
+X-Backend-Instance: backend-green
+```
+
+After the target backend passed the health check, Nginx traffic was switched to the new environment.
+
+```bash
+./scripts/switch-backend.sh green
+```
+
+The script performs the following operations:
+
+1. Checks the health of the target backend
+2. Backs up the current Nginx upstream configuration
+3. Replaces the active backend configuration
+4. Runs `nginx -t`
+5. Reloads Nginx
+6. Verifies the externally returned backend instance header
+7. Restores the previous configuration if verification fails
+
+The externally active backend was verified through Nginx.
+
+```bash
+curl -I http://localhost/api/health
+```
+
+The response was checked for the expected header:
+
+```text
+X-Backend-Instance: backend-green
+```
+
+The following application behavior was tested after switching traffic:
+
+- The application remained accessible through HTTP port `80`
+- The login session remained valid after the backend switch
+- MySQL data remained available
+- Previously uploaded gallery images remained available
+- New image uploads and deletions continued to work
+- Requests were handled by the newly activated backend
+
+Login sessions were preserved because both Blue and Green backends use the same Redis instance through Spring Session.
+
+Application data was preserved because both backends share the same MySQL database and upload directory.
+
+If the newly activated backend fails after deployment, traffic can be returned to the previous environment with:
+
+```bash
+./scripts/rollback.sh
+```
+
+During normal operation, the inactive backend is stopped to reduce memory usage.
+
+```bash
+docker compose \
+    --env-file .env.deploy \
+    -f compose.deploy.yaml \
+    stop backend-blue
+```
+
+Both backends are run simultaneously only during deployment verification and traffic switching.
+
 ## 12. Resource Usage
 
 ## 13. Troubleshooting

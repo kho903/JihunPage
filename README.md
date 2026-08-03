@@ -655,6 +655,35 @@ The GHCR runtime deployment document explains how versioned frontend and backend
 
 ## Limitations and Future Improvements
 
+The current production environment was designed for learning, deployment verification, and portfolio use. It is not yet intended for large-scale commercial traffic.
+
+### Current Limitations
+
+- The application is accessed through an EC2 public IP without a custom domain or HTTPS.
+- Nginx, the frontend, both backend environments, MySQL, and Redis run on a single EC2 instance.
+- MySQL and Redis compete with the application containers for the same CPU and memory resources.
+- Uploaded images are stored in a bind-mounted directory on the EC2 host.
+- The Blue-Green deployment process currently focuses on the backend.
+- Server resources and container status are checked manually.
+- Automated monitoring, centralized logging, and failure notifications are not configured.
+
+### Future Improvements
+
+- Configure a custom domain and HTTPS
+- Store uploaded images in Amazon S3
+- Move MySQL to Amazon RDS
+- Move Redis to Amazon ElastiCache
+- Add automated monitoring and alerting
+- Introduce centralized log management
+- Apply versioned deployment and rollback to the frontend
+- Add automated deployment from GitHub Actions to AWS
+- Expand backend test coverage
+- Add API documentation
+- Improve image storage validation and file management
+- Introduce infrastructure as code
+
+Despite these limitations, the current environment verifies the complete application lifecycle from development and testing to container image publishing, AWS deployment, Blue-Green traffic switching, rollback, and production operation.
+
 ## Development Workflow
 
 Frontend source changes are automatically reflected through Vite HMR.

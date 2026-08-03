@@ -1142,3 +1142,63 @@ A full recreation should be performed carefully because it may start both backen
 Before executing operational commands, the current active backend, container status, and `.env.deploy` image tag should be checked.
 
 ## 15. Limitations
+
+The current production environment was designed for learning, deployment verification, and personal portfolio use. It is not yet intended for large-scale commercial traffic.
+
+### 15.1 No Custom Domain or HTTPS
+
+The application is currently accessed through the EC2 public IPv4 address over HTTP port `80`.
+
+A custom domain and HTTPS certificate have not yet been configured. As a result, communication between the browser and the server is not encrypted.
+
+A future improvement is to configure a domain and enable HTTPS using Nginx and an SSL/TLS certificate.
+
+### 15.2 Single EC2 Instance
+
+Nginx, the frontend, both backend environments, MySQL, and Redis run on the same EC2 instance.
+
+This structure keeps the deployment simple and reduces operating costs, but the EC2 instance is a single point of failure. If the instance stops, all application components become unavailable.
+
+For higher availability, the components could be distributed across multiple instances or replaced with managed AWS services.
+
+### 15.3 Database and Redis on the Application Server
+
+MySQL and Redis run as Docker containers on the same server as the application.
+
+This configuration is sufficient for a personal project, but application resources, database resources, and session storage compete for the same limited memory and CPU.
+
+Future improvements could include moving MySQL to Amazon RDS and Redis to Amazon ElastiCache.
+
+### 15.4 Local File-Based Image Storage
+
+Uploaded gallery images are stored in a bind-mounted directory on the EC2 instance.
+
+The files remain available when backend containers are recreated, but they depend on the storage of a single EC2 instance. They are not automatically replicated across multiple servers.
+
+A future improvement is to store uploaded images in Amazon S3 and serve them through an object storage-based architecture.
+
+### 15.5 Limited Server Resources
+
+The `t4g.small` instance has approximately 2 GiB of physical memory.
+
+Although a 2 GiB swap file was added, running both backend environments together increases memory usage. Therefore, the inactive backend is normally stopped after deployment verification.
+
+A larger instance or separated infrastructure would be required to run all components continuously with more operational capacity.
+
+### 15.6 Backend-Focused Blue-Green Deployment
+
+The current Blue-Green deployment process primarily switches traffic between the two Spring Boot backend containers.
+
+The frontend is deployed as a separate container, but it does not currently use the same Blue-Green traffic-switching process.
+
+A future improvement is to introduce versioned frontend deployment and rollback procedures.
+
+### 15.7 Limited Monitoring and Alerting
+
+Server resources and container status are currently checked manually using commands such as `free`, `docker stats`, and `vmstat`.
+
+Centralized log collection, automated monitoring, and failure notifications have not yet been configured.
+
+Future improvements could include application metrics, container monitoring, log aggregation, and automated alerts.
+
+Despite these limitations, the current environment verifies the complete deployment flow from GitHub Actions and GHCR image publishing to AWS EC2 operation, shared Redis sessions, persistent data, and Blue-Green backend switching.

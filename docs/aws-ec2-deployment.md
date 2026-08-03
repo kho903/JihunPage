@@ -385,6 +385,109 @@ Because the rendered output may contain sensitive values, it should not be copie
 
 ## 9. GHCR Image Deployment
 
+The production server does not build the frontend or backend applications directly.
+Instead, it pulls prebuilt container images from GitHub Container Registry.
+
+The following images are published through GitHub Actions:
+
+- `ghcr.io/kho903/jihunpage-backend`
+- `ghcr.io/kho903/jihunpage-frontend`
+
+Each image is published with the following tags:
+
+- `latest`
+- `sha-<full-commit-sha>`
+
+Although the `latest` tag is convenient for testing, the production environment uses a commit SHA tag whenever possible.
+
+Using a SHA-based tag makes it possible to identify the exact application version running on the server and prevents an existing deployment from changing unexpectedly when the `latest` tag is updated.
+
+The image tag was configured in `.env.deploy`.
+
+```dotenv
+IMAGE_TAG=sha-<full-commit-sha>
+```
+
+The required images were pulled before starting the containers.
+
+```bash
+docker compose \
+    --env-file .env.deploy \
+    -f compose.deploy.yaml \
+    pull
+```
+
+The downloaded images were verified with:
+
+```bash
+docker image ls
+```
+
+The production containers were then started in detached mode.
+
+```bash
+docker compose \
+    --env-file .env.deploy \
+    -f compose.deploy.yaml \
+    up -d
+```
+
+The running container status was checked with:
+
+```bash
+docker compose \
+    --env-file .env.deploy \
+    -f compose.deploy.yaml \
+    ps
+```
+
+Container logs were checked when a service failed to start or became unhealthy.
+
+```bash
+docker compose \
+    --env-file .env.deploy \
+    -f compose.deploy.yaml \
+    logs --tail=100
+```
+
+Logs for a specific service can also be inspected separately.
+
+```bash
+docker compose \
+    --env-file .env.deploy \
+    -f compose.deploy.yaml \
+    logs --tail=100 backend-blue
+```
+
+The frontend and backend images support both AMD64 and ARM64 platforms.
+
+The initial images supported only `linux/amd64`, which caused the following error on the ARM64-based EC2 instance:
+
+```text
+no matching manifest for linux/arm64/v8
+```
+
+To resolve this issue, the GitHub Actions image publishing workflow was updated to use Docker QEMU and Buildx.
+
+The images are currently built for the following platforms:
+
+```text
+linux/amd64
+linux/arm64
+```
+
+As a result, the same image can run on Intel or AMD servers, Apple Silicon development machines, and AWS Graviton-based EC2 instances.
+
+When GHCR authentication is required, the server can log in using a GitHub Personal Access Token with package read permission.
+
+```bash
+echo "<github-token>" | docker login ghcr.io \
+    -u "<github-username>" \
+    --password-stdin
+```
+
+The token must not be written directly into the repository, shell scripts, or public documentation.
+
 ## 10. Upload Directory Permissions
 
 ## 11. Blue-Green Deployment Verification

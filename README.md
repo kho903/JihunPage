@@ -571,6 +571,75 @@ Detailed EC2 setup, security configuration, troubleshooting, and operation comma
 
 ## Testing
 
+JihunPage uses automated checks for shell scripts, the React frontend, and the Spring Boot backend.
+
+### Frontend Check
+
+Run ESLint:
+
+```bash
+cd frontend
+npm ci
+npm run lint
+```
+
+Create a production build:
+
+```bash
+npm run build
+```
+
+### Backend Test
+
+The backend tests run with isolated MySQL and Redis containers through the Docker Compose test profile.
+
+```bash
+docker compose --profile test up \
+    --build \
+    --abort-on-container-exit \
+    --exit-code-from backend-test \
+    backend-test
+```
+
+The test environment includes:
+
+- `mysql-test`
+- `redis-test`
+- Spring Boot test profile
+- `backend-test`
+
+A total of `33` backend tests are currently executed.
+
+The command exits with the same status code as the `backend-test` container. This allows the GitHub Actions workflow to fail when a backend test fails.
+
+After testing, remove the test containers and volumes:
+
+```bash
+docker compose --profile test down -v
+```
+
+### Shell Script Check
+
+Deployment scripts can be checked for Bash syntax with:
+
+```bash
+bash -n scripts/*.sh
+```
+
+The CI workflow also verifies that required deployment scripts have executable permissions.
+
+### Continuous Integration
+
+GitHub Actions automatically runs the following checks for pull requests and relevant branch updates:
+
+- Shell script syntax and permissions
+- Frontend dependency installation
+- ESLint
+- Vite production build
+- Backend integration tests with MySQL and Redis
+
+Production images are published only after the CI workflow succeeds on the `main` branch.
+
 ## Documentation
 
 - [Docker Development Environment](docs/docker-development.md)

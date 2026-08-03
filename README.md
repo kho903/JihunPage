@@ -378,3 +378,31 @@ docker compose down -v
 - Add gallery pagination
 - Add a guestbook feature
 - Add database migration management with Flyway
+
+## Overview
+
+## Key Features
+
+## Architecture
+
+## Technology Stack
+
+## Authentication and Session Management
+
+## Blue-Green Deployment
+
+## CI and Image Publishing
+
+## AWS Deployment
+
+## Screenshots
+
+## Local Development
+
+## Production Deployment
+
+## Testing
+
+## Documentation
+
+## Limitations and Future Improvements

@@ -1,10 +1,12 @@
 # JihunPage
 
+## Overview
+
 A personal introduction website built with React and Spring Boot.
 
 JihunPage includes a personal profile page, session-based authentication, and a public gallery for each member.
 
-## Features
+## Key Features
 
 ### Home
 
@@ -31,44 +33,7 @@ JihunPage includes a personal profile page, session-based authentication, and a 
 - Owner-only upload and delete actions
 - Uploaded image file storage
 
-## Tech Stack
-
-### Frontend
-
-- React 19
-- JavaScript
-- Vite
-- Bootstrap 5
-- ESLint
-
-### Backend
-
-- Java 21
-- Spring Boot 3.5.16
-- Spring Web
-- Spring Data JPA
-- Bean Validation
-- Spring Security Crypto
-- Spring Session
-- MySQL Connector/J
-- Gradle
-
-### Database
-
-- MySQL 8.4 LTS
-- Docker named volume for data persistence
-
-### Session Storage
-
-- Redis 7.4
-- Spring Session Data Redis
-- Redis-backed HTTP session persistence
-
-### Development Environment
-
-- Docker
-- Docker Compose
-- Nginx
+## Architecture
 
 ## Project Structure
 
@@ -140,7 +105,56 @@ Nginx is the single entry point for the Docker development environment.
 - MySQL stores persistent application data.
 - Redis stores HTTP session data.
 
-## Run with Docker
+## Technology Stack
+
+### Frontend
+
+- React 19
+- JavaScript
+- Vite
+- Bootstrap 5
+- ESLint
+
+### Backend
+
+- Java 21
+- Spring Boot 3.5.16
+- Spring Web
+- Spring Data JPA
+- Bean Validation
+- Spring Security Crypto
+- Spring Session
+- MySQL Connector/J
+- Gradle
+
+### Database
+
+- MySQL 8.4 LTS
+- Docker named volume for data persistence
+
+### Session Storage
+
+- Redis 7.4
+- Spring Session Data Redis
+- Redis-backed HTTP session persistence
+
+### Development Environment
+
+- Docker
+- Docker Compose
+- Nginx
+
+## Authentication and Session Management
+
+## Blue-Green Deployment
+
+## CI and Image Publishing
+
+## AWS Deployment
+
+## Screenshots
+
+## Local Development
 
 Create a local `.env` file based on `.env.example`.
 
@@ -200,6 +214,10 @@ The following command also deletes the MySQL and Redis named volumes:
 docker compose down -v
 ```
 
+## Production Deployment
+
+## Testing
+
 ## Documentation
 
 - [Docker Development Environment](docs/docker-development.md)
@@ -207,6 +225,8 @@ docker compose down -v
 - [Production Docker Environment](./docs/production-docker.md)
 - [Blue-Green Deployment Automation](./docs/blue-green-automation.md)
 - [AWS EC2 Deployment Guide](docs/aws-ec2-deployment.md)
+
+## Limitations and Future Improvements
 
 ## Development Workflow
 
@@ -364,45 +384,3 @@ The following command deletes the MySQL and Redis named volumes:
 ```bash
 docker compose down -v
 ```
-
-## Planned Improvements
-
-- Run multiple backend instances
-- Configure Nginx load balancing
-- Verify Redis-backed sessions across backend instances
-- Refactor authentication from Session to JWT
-- Add Access Token and Refresh Token support
-- Store Refresh Tokens in Redis
-- Create production Docker images
-- Deploy the application to AWS
-- Add gallery pagination
-- Add a guestbook feature
-- Add database migration management with Flyway
-
-## Overview
-
-## Key Features
-
-## Architecture
-
-## Technology Stack
-
-## Authentication and Session Management
-
-## Blue-Green Deployment
-
-## CI and Image Publishing
-
-## AWS Deployment
-
-## Screenshots
-
-## Local Development
-
-## Production Deployment
-
-## Testing
-
-## Documentation
-
-## Limitations and Future Improvements

@@ -200,6 +200,66 @@ The React application uses Context to manage authentication state and calls `/ap
 
 ## Blue-Green Deployment
 
+JihunPage uses two Spring Boot backend containers to reduce service interruption during deployment.
+
+- `backend-blue`: EC2 host port `8081`
+- `backend-green`: EC2 host port `8082`
+
+Only one backend receives external traffic at a time. Nginx forwards `/api` and `/uploads` requests to the currently active backend.
+
+### Deployment Flow
+
+1. Detect the currently active and inactive environments.
+2. Pull the new backend image from GHCR.
+3. Recreate only the inactive backend with the new image.
+4. Perform an HTTP health check on the inactive backend.
+5. Verify the expected `X-Backend-Instance` response header.
+6. Update the Nginx upstream configuration.
+7. Run `nginx -t` to validate the configuration.
+8. Reload Nginx and switch external traffic.
+9. Verify the backend instance through the external endpoint.
+10. Restore the previous Nginx configuration if verification fails.
+
+The automated deployment is executed with:
+
+```bash
+./scripts/deploy.sh
+```
+
+The currently active environment can be checked with:
+
+```bash
+./scripts/detect-environment.sh active
+```
+
+The backend response includes an instance-identification header:
+
+```text
+X-Backend-Instance: backend-blue
+```
+
+or:
+
+```text
+X-Backend-Instance: backend-green
+```
+
+### Shared State Between Environments
+
+Blue and Green share the same MySQL database, Redis session store, and upload directory.
+
+Because the session data is stored in Redis, users remain logged in after traffic is switched between the backend environments. Database records and uploaded gallery images also remain available after deployment.
+
+### Rollback
+
+If the newly activated backend fails after deployment, traffic can be returned to the previous environment with:
+
+```bash
+./scripts/rollback.sh
+```
+
+During normal operation, the inactive backend is stopped to reduce memory usage on the `t4g.small` EC2 instance. Both environments run simultaneously only during deployment verification and traffic switching.
+
 ## CI and Image Publishing
 
 ## AWS Deployment

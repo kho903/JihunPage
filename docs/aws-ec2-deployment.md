@@ -296,6 +296,93 @@ The inactive backend is normally stopped to reduce memory usage. Both Blue and G
 
 ## 8. Repository and Environment Setup
 
+The JihunPage repository was cloned onto the EC2 instance to obtain the Docker Compose configuration, Nginx configuration, and deployment scripts.
+
+```bash
+git clone https://github.com/kho903/JihunPage.git
+cd JihunPage
+```
+
+The `main` branch was updated before deployment.
+
+```bash
+git switch main
+git pull origin main
+```
+
+The server does not build the frontend or backend application source code directly. The repository is used primarily for the following deployment files:
+
+- `compose.deploy.yaml`
+- Nginx configuration files
+- Blue-Green deployment scripts
+- Production environment configuration
+- Persistent upload directory
+
+A production environment file named `.env.deploy` was created in the project root.
+
+```bash
+touch .env.deploy
+chmod 600 .env.deploy
+```
+
+The file contains environment-specific values required by Docker Compose, such as:
+
+- MySQL database name
+- MySQL username and password
+- MySQL root password
+- Redis configuration
+- Backend and frontend image names
+- GHCR image tag
+- Application profile settings
+
+The exact variable names must match the variables referenced in `compose.deploy.yaml`.
+
+Example structure:
+
+```dotenv
+MYSQL_DATABASE=<database-name>
+MYSQL_USER=<database-user>
+MYSQL_PASSWORD=<database-password>
+MYSQL_ROOT_PASSWORD=<root-password>
+
+BACKEND_IMAGE=ghcr.io/kho903/jihunpage-backend
+FRONTEND_IMAGE=ghcr.io/kho903/jihunpage-frontend
+IMAGE_TAG=sha-<full-commit-sha>
+```
+
+Actual passwords and deployment secrets must not be committed to Git.
+
+The `.env.deploy` file should be included in `.gitignore`, and only a template containing placeholder values should be shared through the repository.
+
+```gitignore
+.env.deploy
+```
+
+Before starting the containers, the upload directory used by the backend bind mount was created.
+
+```bash
+mkdir -p backend/uploads
+```
+
+The directory permissions were checked because the backend container runs as a non-root `spring` user.
+
+```bash
+ls -ld backend/uploads
+```
+
+The deployment configuration was reviewed before starting the application.
+
+```bash
+docker compose \
+    --env-file .env.deploy \
+    -f compose.deploy.yaml \
+    config
+```
+
+This command validates the Docker Compose configuration and displays the resolved environment variables and service definitions without starting the containers.
+
+Because the rendered output may contain sensitive values, it should not be copied into public logs or committed to the repository.
+
 ## 9. GHCR Image Deployment
 
 ## 10. Upload Directory Permissions

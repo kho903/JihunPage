@@ -157,6 +157,47 @@ Blue and Green backends share the same MySQL database, Redis session store, and 
 
 ## Authentication and Session Management
 
+JihunPage uses server-side HTTP sessions instead of JWT-based authentication.
+
+### Authentication Flow
+
+1. The user submits a user ID and password from the React application.
+2. The frontend sends a login request to the Spring Boot API.
+3. The backend verifies the password using BCrypt.
+4. The authenticated member ID is stored in the HTTP session.
+5. Spring Session stores the session data in Redis.
+6. The browser stores the generated `SESSION` cookie.
+7. Subsequent requests use the cookie to restore the authenticated user.
+
+The authenticated member ID is stored using the following session attribute:
+
+```text
+LOGIN_MEMBER_ID
+```
+
+The Redis session namespace is:
+
+```text
+jihunpage:session
+```
+
+### Main Authentication APIs
+
+| Method | Endpoint           | Purpose                           |
+| ------ | ------------------ | --------------------------------- |
+| `POST` | `/api/members`     | Register a new member             |
+| `POST` | `/api/auth/login`  | Log in and create a session       |
+| `POST` | `/api/auth/logout` | Invalidate the current session    |
+| `GET`  | `/api/auth/me`     | Retrieve the authenticated member |
+
+### Why Redis Is Used
+
+If each backend stored sessions only in its own memory, a session created by Blue would not be available after traffic switched to Green.
+
+Both backend instances therefore use the same Redis session store. This allows the login state to remain valid during Blue-Green traffic switching.
+
+The React application uses Context to manage authentication state and calls `/api/auth/me` when the application is loaded. This restores the logged-in member after a page refresh when a valid session exists.
+
 ## Blue-Green Deployment
 
 ## CI and Image Publishing

@@ -718,6 +718,178 @@ This operating strategy allows the application to use Blue-Green deployment on a
 
 ## 13. Troubleshooting
 
+### 13.1 SSH Connection Timeout
+
+#### Problem
+
+The SSH connection to the EC2 instance timed out after the administrator moved from one network to another.
+
+#### Cause
+
+The EC2 security group allowed SSH access only from the previous public IP address.
+After the network changed, the administrator's public IP address also changed.
+
+#### Resolution
+
+The SSH inbound rule was updated to allow port `22` from the new public IP address.
+
+SSH access was then verified again:
+
+```bash
+ssh -i <private-key>.pem ec2-user@<ec2-public-ip>
+```
+
+Restricting SSH access to a specific public IP reduces unnecessary external exposure, but the rule must be updated whenever the administrator's public IP changes.
+
+### 13.2 Docker Service Not Running
+
+#### Problem
+
+Docker commands failed immediately after Docker was installed.
+
+#### Cause
+
+The Docker package was installed, but the Docker service had not been started.
+
+#### Resolution
+
+The Docker service was enabled and started with:
+
+```bash
+sudo systemctl enable --now docker
+```
+
+The service status was then checked:
+
+```bash
+sudo systemctl status docker
+```
+
+This configuration also ensures that Docker starts automatically when the EC2 instance restarts.
+
+### 13.3 Upload Directory Permission Error
+
+#### Problem
+
+The backend failed to initialize the gallery upload directory and could not save uploaded images.
+
+#### Cause
+
+The backend container runs as a non-root `spring` user, but the bind-mounted `backend/uploads` directory on the EC2 host was owned by `root`.
+
+#### Resolution
+
+The UID and GID of the container user were identified, and the host directory ownership was changed to match them.
+
+```bash
+docker run --rm \
+    --entrypoint id \
+    ghcr.io/kho903/jihunpage-backend:<image-tag>
+```
+
+```bash
+sudo chown -R <spring-uid>:<spring-gid> backend/uploads
+```
+
+After the backend container was recreated, image upload and deletion worked normally.
+
+### 13.4 ARM64 Image Manifest Error
+
+#### Problem
+
+The GHCR images could not be started on the AWS Graviton-based EC2 instance.
+
+```text
+no matching manifest for linux/arm64/v8
+```
+
+#### Cause
+
+The original Docker images supported only the `linux/amd64` platform, while the `t4g.small` EC2 instance uses the ARM64 architecture.
+
+#### Resolution
+
+The GitHub Actions image publishing workflow was updated to use QEMU and Docker Buildx.
+
+The images are now built for:
+
+```text
+linux/amd64
+linux/arm64
+```
+
+The same images can therefore run on Intel or AMD servers, Apple Silicon development machines, and AWS Graviton-based EC2 instances.
+
+### 13.5 Frontend Port 5173 Unavailable
+
+#### Problem
+
+The application could not be accessed through `localhost:5173` in the production environment.
+
+#### Cause
+
+Port `5173` is used by the Vite development server. The production frontend is built in advance and served as static files by an Nginx container.
+
+The production environment does not run the Vite development server or expose port `5173`.
+
+#### Resolution
+
+The deployed application was accessed through the external Nginx server on HTTP port `80`.
+
+```text
+http://<ec2-public-ip>
+```
+
+This behavior is expected in the production environment.
+
+### 13.6 Login Session Lost During Backend Switching
+
+#### Problem
+
+When backend sessions were stored only in application memory, the login state could not be shared between Blue and Green backend instances.
+
+#### Cause
+
+Each backend instance maintained its own independent in-memory HTTP session. A session created by Blue was therefore unavailable when traffic was switched to Green.
+
+#### Resolution
+
+Spring Session Data Redis was introduced so that both backend instances use the same external session store.
+
+The login member ID is stored in the HTTP session using the following key:
+
+```text
+LOGIN_MEMBER_ID
+```
+
+The Redis namespace is:
+
+```text
+jihunpage:session
+```
+
+After this change, the login session remained valid when traffic was switched between Blue and Green.
+
+### 13.7 Limited Memory on the EC2 Instance
+
+#### Problem
+
+Running MySQL, Redis, Nginx, the frontend, and both backend containers on a 2 GiB EC2 instance raised concerns about memory exhaustion.
+
+#### Resolution
+
+A 2 GiB swap file was added, and resource usage was measured using:
+
+```bash
+free -h
+docker stats --no-stream
+vmstat 1 5
+```
+
+Continuous swap-in or swap-out activity was not observed during testing.
+
+To reduce memory consumption, only the active backend remains running during normal operation. The inactive backend is started temporarily during deployment verification and traffic switching.
+
 ## 14. Operation Commands
 
 ## 15. Limitations

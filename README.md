@@ -262,6 +262,80 @@ During normal operation, the inactive backend is stopped to reduce memory usage 
 
 ## CI and Image Publishing
 
+JihunPage uses GitHub Actions to validate the application and publish production container images.
+
+### Continuous Integration
+
+The CI workflow consists of three jobs.
+
+#### Shell Check
+
+- Validates the Bash syntax of deployment scripts
+- Verifies that required shell scripts have executable permissions
+
+#### Frontend Check
+
+- Uses Node.js `24`
+- Installs dependencies with `npm ci`
+- Runs ESLint
+- Creates a Vite production build
+
+#### Backend Test
+
+- Starts isolated `mysql-test` and `redis-test` containers
+- Runs the Spring Boot application with the test profile
+- Executes `33` backend tests
+- Removes test containers and volumes after completion
+
+The backend test environment can also be executed locally with:
+
+```bash
+docker compose --profile test up \
+    --build \
+    --abort-on-container-exit \
+    --exit-code-from backend-test \
+    backend-test
+```
+
+### GHCR Image Publishing
+
+After the CI workflow succeeds on the `main` branch, a separate GitHub Actions workflow builds and publishes the frontend and backend images to GitHub Container Registry.
+
+Published images:
+
+```text
+ghcr.io/kho903/jihunpage-backend
+ghcr.io/kho903/jihunpage-frontend
+```
+
+Each image is published with the following tags:
+
+```text
+latest
+sha-<full-commit-sha>
+```
+
+The production environment uses the SHA-based tag whenever possible. This makes it possible to identify the exact application version deployed to the EC2 instance and prevents an existing deployment from changing unexpectedly when `latest` is updated.
+
+### Multi-Architecture Images
+
+The first published images supported only `linux/amd64`, which caused the following error on the ARM64-based AWS EC2 instance:
+
+```text
+no matching manifest for linux/arm64/v8
+```
+
+The publishing workflow was updated to use QEMU and Docker Buildx.
+
+The images are now built for:
+
+```text
+linux/amd64
+linux/arm64
+```
+
+The same container images can therefore run on Intel or AMD servers, Apple Silicon development machines, and AWS Graviton-based EC2 instances.
+
 ## AWS Deployment
 
 ## Screenshots

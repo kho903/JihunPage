@@ -389,8 +389,6 @@ Detailed setup steps, troubleshooting cases, operation commands, and resource me
 
 - [AWS EC2 Deployment Guide](docs/aws-ec2-deployment.md)
 
-## Screenshots
-
 ## Local Development
 
 The local development environment runs the frontend, backend, MySQL, Redis, and Nginx with Docker Compose.
